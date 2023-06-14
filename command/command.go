@@ -44,6 +44,9 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 	// Is the first character our command prefix?
 	if m.Content[:1] == cl.Prefix {
 		parts := strings.Fields(m.Content[1:])
+		if len(parts) < 1 {
+			return
+		}
 		commandstring := parts[0]
 		cmd, ok := cl.Commands[commandstring]
 		if !ok {
