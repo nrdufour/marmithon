@@ -47,7 +47,7 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 		if len(parts) < 1 {
 			return
 		}
-		commandstring := parts[0]
+		commandstring := strings.ToLower(parts[0])
 		cmd, ok := cl.Commands[commandstring]
 		if !ok {
 			if commandstring == "help" {
