@@ -11,15 +11,15 @@ import (
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
-// Kudos sends a kudos to the target nick
-func (core Core) Kudos(m *hbot.Message, args []string) {
-	if len(args) < 1 {
-		core.Bot.Reply(m, "Dites moi qui je dois remercier !")
-		return
-	}
-	teammate := args[0]
-	core.Bot.Reply(m, fmt.Sprintf("Hey %s, merci d'être si génial !", teammate))
-}
+// // Kudos sends a kudos to the target nick
+// func (core Core) Kudos(m *hbot.Message, args []string) {
+// 	if len(args) < 1 {
+// 		core.Bot.Reply(m, "Dites moi qui je dois remercier !")
+// 		return
+// 	}
+// 	teammate := args[0]
+// 	core.Bot.Reply(m, fmt.Sprintf("Hey %s, merci d'être si génial !", teammate))
+// }
 
 type cveResponse struct {
 	Data struct {

@@ -65,12 +65,12 @@ func main() {
 		Commands: make(map[string]command.Command),
 	}
 	// Add commands to handle
-	cmdList.AddCommand(command.Command{
-		Name:        "kudos",
-		Description: "Remercie une personne '!kudos <nickname>'",
-		Usage:       "!kudos CapNemo",
-		Run:         core.Kudos,
-	})
+	// cmdList.AddCommand(command.Command{
+	// 	Name:        "kudos",
+	// 	Description: "Remercie une personne '!kudos <nickname>'",
+	// 	Usage:       "!kudos CapNemo",
+	// 	Run:         core.Kudos,
+	// })
 	cmdList.AddCommand(command.Command{
 		Name:        "cve",                                                                    // Trigger word
 		Description: "Récupere des informations sur une CVE à partir de http://cve.circl.lu/", // Description
