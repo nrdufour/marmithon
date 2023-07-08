@@ -54,7 +54,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// Setup the command environment
-	core = &command.Core{bot, &conf}
+	core = &command.Core{Bot: bot, Config: &conf}
 	// Add the command trigger (this is what triggers all command handling)
 	bot.AddTrigger(CommandTrigger)
 	// Set the default bot logger to stdout
