@@ -19,6 +19,17 @@ var core *command.Core
 // cmdList holds our command list, which tells the bot what to respond to.
 var cmdList *command.List
 
+// CommandTrigger passes all incoming messages to the commandList parser.
+var CommandTrigger = hbot.Trigger{
+	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
+		return m.Command == "PRIVMSG"
+	},
+	Action: func(bot *hbot.Bot, m *hbot.Message) bool {
+		cmdList.Process(bot, m)
+		return false
+	},
+}
+
 // Main method
 func main() {
 	// Parse flags, this is needed for the flag package to work.
@@ -76,15 +87,4 @@ func main() {
 	// Start up bot (blocks until disconnect)
 	bot.Run()
 	log.Println("Bot shutting down.")
-}
-
-// CommandTrigger passes all incoming messages to the commandList parser.
-var CommandTrigger = hbot.Trigger{
-	func(bot *hbot.Bot, m *hbot.Message) bool {
-		return m.Command == "PRIVMSG"
-	},
-	func(bot *hbot.Bot, m *hbot.Message) bool {
-		cmdList.Process(bot, m)
-		return false
-	},
 }
