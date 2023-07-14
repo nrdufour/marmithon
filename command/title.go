@@ -48,7 +48,12 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 		Jar: jar,
 	}
 
-	resp, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		bot.Reply(m, fmt.Sprintf("Http get error: %s", err))
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0")
+	resp, err := client.Do(req)
 	if err != nil {
 		bot.Reply(m, fmt.Sprintf("Http get error: %s", err))
 	}
