@@ -83,6 +83,12 @@ func main() {
 		Usage:       "!oaci lille FR",
 		Run:         core.SearchForOACI,
 	})
+	cmdList.AddCommand(command.Command{
+		Name:        "convert",
+		Description: "Effectue une conversion d'une mesure d'une unité à une autre '!convert <valeur> <unité d'origine> <unité voulue>'",
+		Usage:       "!convert 400 ft m, !convert pour la liste des unités connues",
+		Run:         core.ConvertUnits,
+	})
 
 	// Start up bot (blocks until disconnect)
 	bot.Run()
