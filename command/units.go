@@ -73,7 +73,7 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 		} else {
 			newValue = value * conversion.Factor
 		}
-		core.Bot.Reply(m, fmt.Sprintf("%f %s est égal à %f %s", value, unitOriginRaw, newValue, unitDestRaw))
+		core.Bot.Reply(m, fmt.Sprintf("%.2f %s est égal à %.2f %s", value, unitOriginRaw, newValue, unitDestRaw))
 	} else {
 		core.Bot.Reply(m, fmt.Sprintf("Désolé, je ne connais pas encore cette conversion"))
 	}
