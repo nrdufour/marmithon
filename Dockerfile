@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.21.0-alpine3.18 as build
+FROM docker.io/library/golang:1.20.7-alpine3.18 as build
 
 WORKDIR /marmitton
 
