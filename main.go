@@ -77,12 +77,12 @@ func main() {
 		Usage:       "!cve CVE-2017-7494",                                                     // Usage example
 		Run:         core.GetCVE,                                                              // Function or method to run when it triggers
 	})
-	cmdList.AddCommand(command.Command{
-		Name:        "oaci",
-		Description: "Trouve un aéroport '!oaci <nom usuel> [<code pays ISO>]'",
-		Usage:       "!oaci lille FR",
-		Run:         core.SearchForOACI,
-	})
+	//cmdList.AddCommand(command.Command{
+	//	Name:        "oaci",
+	//	Description: "Trouve un aéroport '!oaci <nom usuel> [<code pays ISO>]'",
+	//	Usage:       "!oaci lille FR",
+	//	Run:         core.SearchForOACI,
+	//})
 	cmdList.AddCommand(command.Command{
 		Name:        "convert",
 		Description: "Effectue une conversion d'une mesure d'une unité à une autre '!convert <valeur> <unité d'origine> <unité voulue>'",
