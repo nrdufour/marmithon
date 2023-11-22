@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
 
 	hbot "github.com/whyrusleeping/hellabot"
 	"golang.org/x/net/html"
@@ -17,7 +18,9 @@ func isTitleElement(n *html.Node) bool {
 func traverse(n *html.Node) (string, bool) {
 	if isTitleElement(n) {
 		if n.FirstChild != nil {
-			return n.FirstChild.Data, true
+			rawTitle := n.FirstChild.Data
+			actualTitle := strings.TrimSpace(rawTitle)
+			return actualTitle, true
 		} else {
 			return "-- empty title --", true
 		}
