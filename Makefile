@@ -10,6 +10,6 @@ build:
 	podman build --arch arm --override-arch arm -t marmitton .
 
 deploy:
-	podman tag marmitton registry.home:5000/marmitton
-	podman push registry.home:5000/marmitton
+	podman tag marmitton registry.home.arpa:5000/marmitton
+	podman push registry.home.arpa:5000/marmitton
 
