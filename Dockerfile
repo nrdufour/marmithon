@@ -4,7 +4,7 @@ WORKDIR /marmitton
 
 RUN apk update && apk add --no-cache tini-static
 COPY . .
-RUN go build
+RUN go build -ldflags="-s -w"
 
 # -----------------------------------------------------------------------------
 FROM gcr.io/distroless/static:nonroot
