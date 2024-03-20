@@ -27,4 +27,4 @@ jobs:
           push: true
           tags: |
             git.internal/nrdufour/marmitton:latest
-            git.internal/nrdufour/marmitton:main-${{ GITHUB_SHA }}
+            git.internal/nrdufour/marmitton:main-foo
