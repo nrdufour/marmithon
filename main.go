@@ -89,6 +89,12 @@ func main() {
 		Usage:       "!convert 400 ft m, !convert pour la liste des unités connues",
 		Run:         core.ConvertUnits,
 	})
+	cmdList.AddCommand(command.Command{
+		Name:        "version",
+		Description: "Affiche la version du bot",
+		Usage:       "!version",
+		Run:         core.ShowVersion,
+	})
 
 	// Start up bot (blocks until disconnect)
 	bot.Run()

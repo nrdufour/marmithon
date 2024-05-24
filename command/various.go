@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/carlmjohnson/versioninfo"
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
@@ -109,4 +110,10 @@ func (core Core) GetCVE(m *hbot.Message, args []string) {
 	if len(r.Data.Refmap.Confirm) > 0 {
 		core.Bot.Reply(m, fmt.Sprintf("%v", r.Data.Refmap.Confirm[0]))
 	}
+}
+
+func (core Core) ShowVersion(m *hbot.Message, args []string) {
+	core.Bot.Reply(m, fmt.Sprintf("Version: %s -- Dernier commit: %s",
+		versioninfo.Short(),
+		versioninfo.LastCommit))
 }
