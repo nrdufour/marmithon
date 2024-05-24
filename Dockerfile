@@ -2,7 +2,10 @@ FROM docker.io/library/golang:1.22.3-alpine3.18 as build
 
 WORKDIR /marmitton
 
-RUN apk update && apk add --no-cache tini-static
+## git is needed for the go build process with the library github.com/earthboundkid/versioninfo
+RUN apk update && apk add --no-cache \
+    tini-static \
+    git
 COPY . .
 RUN go build -ldflags="-s -w"
 
