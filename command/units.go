@@ -50,7 +50,7 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 
 	value, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("Désolé, je ne comprends pas"))
+		core.Bot.Reply(m, "Désolé, je ne comprends pas")
 		return
 	}
 	unitOriginRaw := args[1]
@@ -75,6 +75,6 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 		}
 		core.Bot.Reply(m, fmt.Sprintf("%.2f %s est égal à %.2f %s", value, unitOriginRaw, newValue, unitDestRaw))
 	} else {
-		core.Bot.Reply(m, fmt.Sprintf("Désolé, je ne connais pas encore cette conversion"))
+		core.Bot.Reply(m, "Désolé, je ne connais pas encore cette conversion")
 	}
 }

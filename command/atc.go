@@ -19,7 +19,7 @@ func ContainsI(a string, b string) bool {
 
 func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 	if len(args) == 0 {
-		core.Bot.Reply(m, fmt.Sprintf("Dites moi au moins qqchose sur cet aéroport"))
+		core.Bot.Reply(m, "Dites moi au moins qqchose sur cet aéroport")
 		return
 	}
 
@@ -33,7 +33,7 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 
 	f, err := os.Open("/data/airports.csv")
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("Désolé, je ne peux lire ma base d'aéroports!"))
+		core.Bot.Reply(m, "Désolé, je ne peux lire ma base d'aéroports!")
 		return
 	}
 	defer f.Close()
@@ -46,7 +46,7 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 			break
 		}
 		if err != nil {
-			core.Bot.Reply(m, fmt.Sprintf("Désolé, je ne peux lire ma base d'aéroports!"))
+			core.Bot.Reply(m, "Désolé, je ne peux lire ma base d'aéroports!")
 			return
 		}
 
@@ -68,7 +68,7 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 	}
 
 	if counter == 0 {
-		core.Bot.Reply(m, fmt.Sprintf("Désolé, je n'ai pas trouvé d'aéroports"))
+		core.Bot.Reply(m, "Désolé, je n'ai pas trouvé d'aéroports")
 	} else {
 		if counter > limit {
 			core.Bot.Reply(m, fmt.Sprintf("--- Total: %d (limit: %d)", counter, limit))

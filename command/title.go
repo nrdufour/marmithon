@@ -48,7 +48,7 @@ func GetHtmlTitle(r io.Reader) (string, bool) {
 func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		bot.Reply(m, fmt.Sprintf("error with the cookiejar"))
+		bot.Reply(m, "error with the cookiejar")
 	}
 
 	client := http.Client{
