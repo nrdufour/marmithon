@@ -23,9 +23,9 @@ jobs:
       - name: Login to git.internal
         uses: docker/login-action@v3
         with:
-          registry: git.internal
-          username: ${{ secrets.GIT_USERNAME }}
-          password: ${{ secrets.GIT_PASSWORD }}
+          registry: forge.internal
+          username: "username"
+          password: ${{ env.GITHUB_TOKEN }}
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -33,5 +33,5 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            git.internal/nrdufour/marmitton:latest
-            git.internal/nrdufour/marmitton:${{ env.BUILD_TAG }}
+            forge.internal/nemo/marmitton:latest
+            forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}
