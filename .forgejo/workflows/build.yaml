@@ -3,6 +3,11 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '.forgejo/workflows/renovate.yaml'
+      - 'dev.toml'
+      - 'renovate.json'
+      - 'README.md'
 
 jobs:
   docker:
