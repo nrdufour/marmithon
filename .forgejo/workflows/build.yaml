@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - '.forgejo/workflows/renovate.yaml'
       - 'dev.toml'
-      - 'renovate.json'
+      - 'renovate.json5'
       - 'README.md'
 
 jobs:
