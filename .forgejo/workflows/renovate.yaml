@@ -4,8 +4,9 @@ on:
     - cron: '0 */3 * * *'
   push:
     branches: ["main"]
-    paths-ignore:
-      - '!.forgejo/workflows/renovate.yaml'
+    paths:
+      - '.forgejo/workflows/renovate.yaml'
+      - 'renovate.json5'
 
 jobs:
   renovate:
