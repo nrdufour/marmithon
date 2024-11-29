@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/carlmjohnson/versioninfo v0.22.5
+	github.com/carlmjohnson/versioninfo/v2 v2.24.1
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	golang.org/x/net v0.31.0
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
