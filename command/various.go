@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/carlmjohnson/versioninfo"
+	"github.com/earthboundkid/versioninfo/v2"
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
