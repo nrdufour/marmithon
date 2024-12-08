@@ -1,0 +1,13 @@
+# fly.toml app configuration file generated for marmitton on 2024-12-08T10:22:55-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'marmitton'
+primary_region = 'ewr'
+
+[build]
+  dockerfile = './Dockerfile.fly'
+
+[[vm]]
+  size = 'shared-cpu-1x'
