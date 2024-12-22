@@ -19,6 +19,7 @@ func traverse(n *html.Node) (string, bool) {
 	if isTitleElement(n) {
 		if n.FirstChild != nil {
 			rawTitle := n.FirstChild.Data
+			fmt.Printf("rawTitle: %s\n", rawTitle)
 			actualTitle := strings.TrimSpace(rawTitle)
 			return actualTitle, true
 		} else {
