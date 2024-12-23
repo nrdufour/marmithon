@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"regexp"
 	"strings"
 
 	hbot "github.com/whyrusleeping/hellabot"
@@ -46,6 +47,28 @@ func GetHtmlTitle(r io.Reader) (string, bool) {
 	return traverse(doc)
 }
 
+func GetYoutubeTitle(r io.Reader) (string, bool) {
+	title := "- error with title -"
+
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, r)
+	if err != nil {
+		return title, false
+	}
+
+	// fmt.Println(buf.String())
+
+	re := regexp.MustCompile(`"videoDetails":{"videoId":"[^"]+","title":"([^"]+)","lengthSeconds"`)
+	results := re.FindStringSubmatch(buf.String())
+
+	if len(results) == 2 {
+		// We found the damn title
+		title = results[1]
+	}
+
+	return title, true
+}
+
 func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -67,7 +90,18 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	}
 	defer resp.Body.Close()
 
-	if title, ok := GetHtmlTitle(resp.Body); ok {
-		bot.Reply(m, fmt.Sprintf("\x02%s", title))
+	// Testing if it's a bloody youtube video
+	isYoutube, err := regexp.Match(`www.youtube.com\/watch\?v=`, []byte(url))
+	if err != nil {
+		bot.Reply(m, fmt.Sprintf("Error matching url: %s", err))
+	}
+	if isYoutube {
+		if title, ok := GetYoutubeTitle(resp.Body); ok {
+			bot.Reply(m, fmt.Sprintf("\x02%s", title))
+		}
+	} else {
+		if title, ok := GetHtmlTitle(resp.Body); ok {
+			bot.Reply(m, fmt.Sprintf("\x02%s", title))
+		}
 	}
 }
