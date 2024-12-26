@@ -63,7 +63,7 @@ func GetYoutubeTitle(r io.Reader) (string, bool) {
 
 	if len(results) == 2 {
 		// We found the damn title
-		title = results[1]
+		title = results[1] + " - Fucking Youtube"
 	}
 
 	return title, true
