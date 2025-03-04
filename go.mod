@@ -1,12 +1,14 @@
 module marmitton
 
-go 1.20
+go 1.23.0
+
+toolchain go1.24.0
 
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
-	golang.org/x/net v0.35.0
+	golang.org/x/net v0.36.0
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
 )
 
