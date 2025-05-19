@@ -1,15 +1,17 @@
+.PHONY: build deploy clean
 
-.PHONY: build
-
-all: build
-
-multiarch:
-	sudo podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
-
+all:
+	@echo "Building Marmitton..."
+	make build
 build:
-	podman build --arch arm --override-arch arm -t marmitton .
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+	docker buildx build --platform arm64 --tag marmitton .
 
-deploy:
-	podman tag marmitton registry.home.arpa:5000/marmitton
-	podman push registry.home.arpa:5000/marmitton
+deploy: build 
+	@echo "Deploying Marmitton to Forgejo Registry..."
+	docker tag marmitton forge.internal/nemo/marmitton:test
+	docker push forge.internal/nemo/marmitton:test
 
+clean:
+	@echo "Cleaning up Docker images..."
+	docker rmi marmitton
