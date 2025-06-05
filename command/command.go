@@ -96,12 +96,9 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 			results := URLPattern.FindAllSubmatch([]byte(m.Content), -1)
 			url := string(results[0][1])
 
-			// Ignoring the url feature for the time being.
-			// Another bot does it at the moment.
-			fmt.Printf("Ignoring url for now %s\n", url)
-			// go func(bot *hbot.Bot, m *hbot.Message, url string) {
-			// 	DisplayHTMLTitle(bot, m, url)
-			// }(bot, m, url)
+			go func(bot *hbot.Bot, m *hbot.Message, url string) {
+				DisplayHTMLTitle(bot, m, url)
+			}(bot, m, url)
 		}
 
 	}
