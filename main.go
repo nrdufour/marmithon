@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"log"
-	"marmitton/command"
-	"marmitton/config"
+	"marmithon/command"
+	"marmithon/config"
 
 	hbot "github.com/whyrusleeping/hellabot"
 	log15 "gopkg.in/inconshreveable/log15.v2"

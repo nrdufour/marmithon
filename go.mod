@@ -1,4 +1,4 @@
-module marmitton
+module marmithon
 
 go 1.23.0
 

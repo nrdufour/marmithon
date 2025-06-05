@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"marmitton/config"
+	"marmithon/config"
 
 	hbot "github.com/whyrusleeping/hellabot"
 )
