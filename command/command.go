@@ -92,8 +92,7 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 	} else {
 		// Not a command
 		URLPattern := regexp.MustCompile(`^.*(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)).*$`)
-		// HACK: only match yahoo for now
-		if URLPattern.MatchString(m.Content) && strings.Contains(m.Content, "yahoo") {
+		if URLPattern.MatchString(m.Content) {
 			results := URLPattern.FindAllSubmatch([]byte(m.Content), -1)
 			url := string(results[0][1])
 
