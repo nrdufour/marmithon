@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"regexp"
@@ -11,42 +10,18 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	hbot "github.com/whyrusleeping/hellabot"
-	"golang.org/x/net/html"
 )
 
-func isTitleElement(n *html.Node) bool {
-	return n.Type == html.ElementNode && n.Data == "title"
-}
-
-func traverse(n *html.Node) (string, bool) {
-	if isTitleElement(n) {
-		if n.FirstChild != nil {
-			rawTitle := n.FirstChild.Data
-			fmt.Printf("rawTitle: %s\n", rawTitle)
-			actualTitle := strings.TrimSpace(rawTitle)
-			return actualTitle, true
-		} else {
-			return "-- empty title --", true
-		}
-	}
-
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		result, ok := traverse(c)
-		if ok {
-			return result, ok
-		}
-	}
-
-	return "", false
-}
-
 func GetHtmlTitle(r io.Reader) (string, bool) {
-	doc, err := html.Parse(r)
-	if err != nil {
-		panic("Fail to parse html")
-	}
+  // Load the HTML document
+  doc, err := goquery.NewDocumentFromReader(r)
+  if err != nil {
+    return "", false
+  }
 
-	return traverse(doc)
+  // Find the review items
+  title := doc.Find("title").Text()
+  return title, true
 }
 
 func GetYoutubeTitle(r io.Reader) (string, bool) {
@@ -58,10 +33,14 @@ func GetYoutubeTitle(r io.Reader) (string, bool) {
 		return title, false
 	}
 
-	// fmt.Println(buf.String())
+	fmt.Println("CONNNNTENNNT ---->")
+	fmt.Println(buf.String())
 
 	re := regexp.MustCompile(`"videoPrimaryInfoRenderer":{"title":{"runs":\[{"text":"([^"]+)"}`)
 	results := re.FindStringSubmatch(buf.String())
+
+	fmt.Println("RESULTS ---->")
+	fmt.Println(results)
 
 	if len(results) >= 2 {
 		// We found the damn title
@@ -71,7 +50,7 @@ func GetYoutubeTitle(r io.Reader) (string, bool) {
 	return title, true
 }
 
-func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
+func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		bot.Reply(m, "error with the cookiejar")
@@ -85,7 +64,7 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	if err != nil {
 		bot.Reply(m, fmt.Sprintf("Http get error: %s", err))
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36")
 	resp, err := client.Do(req)
 	if err != nil {
 		bot.Reply(m, fmt.Sprintf("Http get error: %s", err))
@@ -98,7 +77,7 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 		bot.Reply(m, fmt.Sprintf("Error matching url: %s", err))
 	}
 	if isYoutube {
-		if title, ok := GetHtmlTitle(resp.Body); ok {
+		if title, ok := GetYoutubeTitle(resp.Body); ok {
 			bot.Reply(m, fmt.Sprintf("\x02%s", title))
 		}
 	} else {
@@ -106,27 +85,4 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 			bot.Reply(m, fmt.Sprintf("\x02%s", title))
 		}
 	}
-}
-
-func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
-  // Request the HTML page.
-  res, err := http.Get(url)
-  if err != nil {
-    log.Fatal(err)
-  }
-  defer res.Body.Close()
-  if res.StatusCode != 200 {
-    log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
-  }
-
-  // Load the HTML document
-  doc, err := goquery.NewDocumentFromReader(res.Body)
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  // Find the review items
-  title := doc.Find("title").Text()
-
-  bot.Reply(m, fmt.Sprintf("\x02%s", title))
 }
