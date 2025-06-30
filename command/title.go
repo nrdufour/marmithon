@@ -3,11 +3,13 @@ package command
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"regexp"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	hbot "github.com/whyrusleeping/hellabot"
 	"golang.org/x/net/html"
 )
@@ -96,7 +98,7 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 		bot.Reply(m, fmt.Sprintf("Error matching url: %s", err))
 	}
 	if isYoutube {
-		if title, ok := GetYoutubeTitle(resp.Body); ok {
+		if title, ok := GetHtmlTitle(resp.Body); ok {
 			bot.Reply(m, fmt.Sprintf("\x02%s", title))
 		}
 	} else {
@@ -104,4 +106,27 @@ func DisplayHTMLTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 			bot.Reply(m, fmt.Sprintf("\x02%s", title))
 		}
 	}
+}
+
+func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
+  // Request the HTML page.
+  res, err := http.Get(url)
+  if err != nil {
+    log.Fatal(err)
+  }
+  defer res.Body.Close()
+  if res.StatusCode != 200 {
+    log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+  }
+
+  // Load the HTML document
+  doc, err := goquery.NewDocumentFromReader(res.Body)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  // Find the review items
+  title := doc.Find("title").Text()
+
+  bot.Reply(m, fmt.Sprintf("\x02%s", title))
 }

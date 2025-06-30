@@ -97,7 +97,7 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 			url := string(results[0][1])
 
 			go func(bot *hbot.Bot, m *hbot.Message, url string) {
-				DisplayHTMLTitle(bot, m, url)
+				RetrievePageTitle(bot, m, url)
 			}(bot, m, url)
 		}
 
