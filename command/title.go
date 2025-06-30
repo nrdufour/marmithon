@@ -33,14 +33,14 @@ func GetYoutubeTitle(r io.Reader) (string, bool) {
 		return title, false
 	}
 
-	fmt.Println("CONNNNTENNNT ---->")
-	fmt.Println(buf.String())
+	// fmt.Println("CONNNNTENNNT ---->")
+	// fmt.Println(buf.String())
 
 	re := regexp.MustCompile(`"videoPrimaryInfoRenderer":{"title":{"runs":\[{"text":"([^"]+)"}`)
 	results := re.FindStringSubmatch(buf.String())
 
-	fmt.Println("RESULTS ---->")
-	fmt.Println(results)
+	// fmt.Println("RESULTS ---->")
+	// fmt.Println(results)
 
 	if len(results) >= 2 {
 		// We found the damn title
