@@ -20,7 +20,7 @@ func GetHtmlTitle(r io.Reader) (string, bool) {
   }
 
   // Find the review items
-  title := doc.Find("title").Text()
+  title := doc.Find("title").First().Text()
   return title, true
 }
 
