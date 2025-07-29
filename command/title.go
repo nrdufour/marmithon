@@ -67,7 +67,9 @@ func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36")
 	resp, err := client.Do(req)
 	if err != nil {
-		bot.Reply(m, fmt.Sprintf("Http get error: %s", err))
+		fmt.Printf("HTTP ERROR: [%s]\n", err)
+		bot.Reply(m, "Désolé, le titre n'est pas disponible pour le moment.")
+		return
 	}
 	defer resp.Body.Close()
 
