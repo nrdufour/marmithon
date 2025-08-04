@@ -74,7 +74,7 @@ func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	defer resp.Body.Close()
 
 	// Testing if it's a bloody youtube video
-	isYoutube, err := regexp.Match(`(www.|m.)?youtu(.be|be.com)\/watch\?v=`, []byte(url))
+	isYoutube, err := regexp.Match(`(www.|m.)?youtu(.be|be.com)`, []byte(url))
 	if err != nil {
 		bot.Reply(m, fmt.Sprintf("Error matching url: %s", err))
 	}
