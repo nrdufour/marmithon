@@ -14,7 +14,7 @@ jobs:
     runs-on: native
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
       - name: Set build tag
         shell: bash
         run: |
