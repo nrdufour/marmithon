@@ -78,12 +78,17 @@ func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	if err != nil {
 		bot.Reply(m, fmt.Sprintf("Error matching url: %s", err))
 	}
+
+	title, ok := "", true
+
 	if isYoutube {
-		if title, ok := GetYoutubeTitle(resp.Body); ok {
-			bot.Reply(m, fmt.Sprintf("\x02%s", title))
-		}
+		title, ok = GetYoutubeTitle(resp.Body)
 	} else {
-		if title, ok := GetHtmlTitle(resp.Body); ok {
+		title, ok = GetHtmlTitle(resp.Body)
+	}
+
+	if ok {
+		if len(title) > 0 {
 			bot.Reply(m, fmt.Sprintf("\x02%s", title))
 		}
 	}
