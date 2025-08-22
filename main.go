@@ -5,6 +5,7 @@ import (
 	"log"
 	"marmithon/command"
 	"marmithon/config"
+	"os"
 
 	hbot "github.com/whyrusleeping/hellabot"
 	log15 "gopkg.in/inconshreveable/log15.v2"
@@ -32,15 +33,41 @@ var CommandTrigger = hbot.Trigger{
 
 // Main method
 func main() {
-	// Parse flags, this is needed for the flag package to work.
-	// See https://godoc.org/flag
 	flag.Parse()
-	// Read the TOML Config
-	conf := config.FromFile(*configFile)
-	// Validate the config to see it's not missing anything vital.
-	config.ValidateConfig(conf)
 
-	// Setup our options anonymous function.. This gets called on the hbot.Bot object internally, applying the options inside.
+	if err := run(); err != nil {
+		log.Fatalf("Erreur fatale: %v", err)
+	}
+}
+
+func run() error {
+	conf, err := config.FromFile(*configFile)
+	if err != nil {
+		return err
+	}
+
+	if err := config.ValidateConfig(conf); err != nil {
+		return err
+	}
+
+	bot, err := createBot(conf)
+	if err != nil {
+		return err
+	}
+
+	core = &command.Core{Bot: bot, Config: &conf}
+	bot.AddTrigger(CommandTrigger)
+	bot.Logger.SetHandler(log15.StdoutHandler)
+
+	setupCommands()
+
+	log.Println("Démarrage du bot...")
+	bot.Run()
+	log.Println("Arrêt du bot.")
+	return nil
+}
+
+func createBot(conf config.Config) (*hbot.Bot, error) {
 	options := func(bot *hbot.Bot) {
 		bot.SSL = conf.SSL
 		if conf.ServerPassword != "" {
@@ -48,47 +75,34 @@ func main() {
 		}
 		bot.Channels = conf.Channels
 	}
-	// Create a new instance of hbot.Bot
+
 	bot, err := hbot.NewBot(conf.Server, conf.Nick, options)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	// Setup the command environment
-	core = &command.Core{Bot: bot, Config: &conf}
-	// Add the command trigger (this is what triggers all command handling)
-	bot.AddTrigger(CommandTrigger)
-	// Set the default bot logger to stdout
-	bot.Logger.SetHandler(log15.StdoutHandler)
-	// Initialize the command list
+	return bot, nil
+}
+
+func setupCommands() {
 	cmdList = &command.List{
 		Prefix:   "!",
 		Commands: make(map[string]command.Command),
 	}
-	// Add commands to handle
-	// cmdList.AddCommand(command.Command{
-	// 	Name:        "kudos",
-	// 	Description: "Remercie une personne '!kudos <nickname>'",
-	// 	Usage:       "!kudos CapNemo",
-	// 	Run:         core.Kudos,
-	// })
+
 	cmdList.AddCommand(command.Command{
-		Name:        "cve",                                                                    // Trigger word
-		Description: "Récupere des informations sur une CVE à partir de http://cve.circl.lu/", // Description
-		Usage:       "!cve CVE-2017-7494",                                                     // Usage example
-		Run:         core.GetCVE,                                                              // Function or method to run when it triggers
+		Name:        "cve",
+		Description: "Récupère des informations sur une CVE à partir de http://cve.circl.lu/",
+		Usage:       "!cve CVE-2017-7494",
+		Run:         core.GetCVE,
 	})
-	//cmdList.AddCommand(command.Command{
-	//	Name:        "oaci",
-	//	Description: "Trouve un aéroport '!oaci <nom usuel> [<code pays ISO>]'",
-	//	Usage:       "!oaci lille FR",
-	//	Run:         core.SearchForOACI,
-	//})
+
 	cmdList.AddCommand(command.Command{
 		Name:        "convert",
-		Description: "Effectue une conversion d'une mesure d'une unité à une autre '!convert <valeur> <unité d'origine> <unité voulue>'",
+		Description: "Effectue une conversion d'une mesure d'une unité à une autre",
 		Usage:       "!convert 400 ft m, !convert pour la liste des unités connues",
 		Run:         core.ConvertUnits,
 	})
+
 	cmdList.AddCommand(command.Command{
 		Name:        "version",
 		Description: "Affiche la version du bot",
@@ -96,7 +110,12 @@ func main() {
 		Run:         core.ShowVersion,
 	})
 
-	// Start up bot (blocks until disconnect)
-	bot.Run()
-	log.Println("Bot shutting down.")
+	if _, err := os.Stat("/data/airports.csv"); err == nil {
+		cmdList.AddCommand(command.Command{
+			Name:        "oaci",
+			Description: "Trouve un aéroport par nom avec code pays optionnel",
+			Usage:       "!oaci lille FR",
+			Run:         core.SearchForOACI,
+		})
+	}
 }

@@ -1,4 +1,4 @@
-server = "irc.theairlock.net:7778"
-nick = "hellabot"
-ssl = true
-channels = ["#test", "#test2:somepassword"]
+server = "irc.ircnet.com:6667"
+nick = "MarmithonT"
+ssl = false
+channels = ["#chezmoi"]

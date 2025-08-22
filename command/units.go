@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -77,4 +78,42 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	} else {
 		core.Bot.Reply(m, "Désolé, je ne connais pas encore cette conversion")
 	}
+}
+
+func validateUnits(unitOrigin, unitDest string) error {
+	originUnit, originExists := KnownUnits[unitOrigin]
+	destUnit, destExists := KnownUnits[unitDest]
+
+	if !originExists {
+		return fmt.Errorf("unité d'origine inconnue: %s", unitOrigin)
+	}
+	if !destExists {
+		return fmt.Errorf("unité de destination inconnue: %s", unitDest)
+	}
+	if originUnit.Type != destUnit.Type {
+		return fmt.Errorf("impossible de convertir entre des types d'unités différents (%s vers %s)", unitOrigin, unitDest)
+	}
+	return nil
+}
+
+func performConversion(value float64, unitOrigin, unitDest string) (float64, error) {
+	var conversionId string
+	var reverseConversion bool
+
+	if unitOrigin < unitDest {
+		conversionId = fmt.Sprintf("%s/%s", unitOrigin, unitDest)
+	} else {
+		conversionId = fmt.Sprintf("%s/%s", unitDest, unitOrigin)
+		reverseConversion = true
+	}
+
+	conversion, exists := ConversionTable[conversionId]
+	if !exists {
+		return 0, errors.New("désolé, je ne connais pas encore cette conversion")
+	}
+
+	if reverseConversion {
+		return value / conversion.Factor, nil
+	}
+	return value * conversion.Factor, nil
 }

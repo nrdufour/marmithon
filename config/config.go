@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"strings"
 
@@ -9,17 +9,21 @@ import (
 )
 
 // FromFile reads the specified TOML configuration file and returns a Config object.
-func FromFile(configFile string) Config {
+func FromFile(configFile string) (Config, error) {
+	if configFile == "" {
+		return Config{}, fmt.Errorf("nom de fichier de configuration vide")
+	}
+
 	_, err := os.Stat(configFile)
 	if err != nil {
-		log.Fatal("Config file is missing: ", "path", configFile)
+		return Config{}, fmt.Errorf("fichier de configuration manquant: %s - %w", configFile, err)
 	}
 
 	var config Config
 	if _, err := toml.DecodeFile(configFile, &config); err != nil {
-		log.Fatal("error decoding config file", "error", err)
+		return Config{}, fmt.Errorf("erreur lors du décodage du fichier de configuration: %w", err)
 	}
-	return config
+	return config, nil
 }
 
 // Config holds the bot's configuration
@@ -31,17 +35,19 @@ type Config struct {
 	SSL            bool
 }
 
-// ValidateConfig checks that the config object has all the values it should, and fatally fails if not.
-func ValidateConfig(config Config) {
+// ValidateConfig checks that the config object has all the values it should.
+func ValidateConfig(config Config) error {
 	if config.Server == "" {
-		log.Fatal("empty server address, can't continue")
-	} else if !strings.Contains(config.Server, ":") {
-		log.Fatal("server address needs to be in format <host/ip>:<port>")
+		return fmt.Errorf("adresse du serveur vide, impossible de continuer")
+	}
+	if !strings.Contains(config.Server, ":") {
+		return fmt.Errorf("l'adresse du serveur doit être au format <host/ip>:<port>")
 	}
 	if config.Nick == "" {
-		log.Fatal("empty nickname, can't continue")
+		return fmt.Errorf("pseudonyme vide, impossible de continuer")
 	}
 	if len(config.Channels) == 0 {
-		log.Fatal("no channels configured, can't continue")
+		return fmt.Errorf("aucun canal configuré, impossible de continuer")
 	}
+	return nil
 }

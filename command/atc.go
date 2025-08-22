@@ -10,6 +10,12 @@ import (
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
+type Airport struct {
+	OACI    string
+	Name    string
+	Country string
+}
+
 func ContainsI(a string, b string) bool {
 	return strings.Contains(
 		strings.ToLower(a),
@@ -76,4 +82,53 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 			core.Bot.Reply(m, fmt.Sprintf("--- Total: %d", counter))
 		}
 	}
+}
+
+func searchAirports(searchTerm, countryLimiter string, maxResults int) ([]Airport, error) {
+	f, err := os.Open("/data/airports.csv")
+	if err != nil {
+		return nil, fmt.Errorf("impossible d'ouvrir la base de données d'aéroports: %w", err)
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	var airports []Airport
+
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("erreur lors de la lecture de la base de données: %w", err)
+		}
+
+		if len(record) < 9 {
+			continue
+		}
+
+		oaci := strings.TrimSpace(record[1])
+		name := strings.TrimSpace(record[3])
+		country := strings.TrimSpace(record[8])
+
+		if len(oaci) != 4 || name == "" {
+			continue
+		}
+
+		if !ContainsI(name, searchTerm) {
+			continue
+		}
+
+		if countryLimiter != "" && strings.ToUpper(country) != countryLimiter {
+			continue
+		}
+
+		airports = append(airports, Airport{
+			OACI:    oaci,
+			Name:    name,
+			Country: country,
+		})
+	}
+
+	return airports, nil
 }

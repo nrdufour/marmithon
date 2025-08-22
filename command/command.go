@@ -41,66 +41,93 @@ func (cl *List) AddCommand(c Command) {
 
 // Process handles incoming messages and looks for incoming messages that start with the command prefix. Commands are triggered if they exist
 func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
-	// Is the first character our command prefix?
-	if m.Content[:1] == cl.Prefix {
-		parts := strings.Fields(m.Content[1:])
-		if len(parts) < 1 {
-			return
-		}
-		commandstring := strings.ToLower(parts[0])
-		cmd, ok := cl.Commands[commandstring]
-		if !ok {
-			if commandstring == "help" {
-				if len(parts) < 2 {
-					bot.Msg(m.From, "Voici ce que je peux faire:")
-					var commands bytes.Buffer
-					i := 0
-					for _, cmd := range cl.Commands {
-						i = i + 1
-						commands.WriteString(cmd.Name)
-						if i != len(cl.Commands) {
-							commands.WriteString(", ")
-						}
-					}
-					bot.Msg(m.From, commands.String())
-					bot.Msg(m.From, fmt.Sprintf("Le préfixe de toutes ces commandes est: \"%s\"", cl.Prefix))
-					bot.Msg(m.From, fmt.Sprintf("Tapez %shelp <commande> pour plus de détails", cl.Prefix))
-				} else {
-					helpcmd, helpok := cl.Commands[parts[1]]
-					if helpok {
-						bot.Msg(m.From, fmt.Sprintf("%s: %s", helpcmd.Description, helpcmd.Usage))
-					} else {
-						bot.Msg(m.From, fmt.Sprintf("Commande inconnue: %s", parts[1]))
-					}
-				}
-			}
-			return
-		}
-		// looks good, get the quote and reply with the result
-		bot.Logger.Debug("action", "start processing",
-			"args", parts,
-			"full text", m.Content)
-		go func(m *hbot.Message) {
-			bot.Logger.Debug("action", "executing",
-				"full text", m.Content)
-			if len(parts) > 1 {
-				cmd.Run(m, parts[1:])
-			} else {
-				cmd.Run(m, []string{})
-			}
-		}(m)
-	} else {
-		// Not a command
-		URLPattern := regexp.MustCompile(`^.*(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)).*$`)
-		// HACK: only match yahoo for now
-		if URLPattern.MatchString(m.Content) /* && strings.Contains(m.Content, "yahoo") */ {
-			results := URLPattern.FindAllSubmatch([]byte(m.Content), -1)
-			url := string(results[0][1])
+	if len(m.Content) == 0 {
+		return
+	}
 
+	if m.Content[0:1] == cl.Prefix {
+		cl.handleCommand(bot, m)
+	} else {
+		cl.handleURLDetection(bot, m)
+	}
+}
+
+func (cl *List) handleCommand(bot *hbot.Bot, m *hbot.Message) {
+	parts := strings.Fields(m.Content[1:])
+	if len(parts) < 1 {
+		return
+	}
+
+	commandName := strings.ToLower(strings.TrimSpace(parts[0]))
+	cmd, exists := cl.Commands[commandName]
+
+	if !exists {
+		if commandName == "help" {
+			cl.handleHelpCommand(bot, m, parts)
+		}
+		return
+	}
+
+	bot.Logger.Debug("action", "start processing",
+		"args", parts,
+		"full text", m.Content)
+
+	go func(m *hbot.Message) {
+		bot.Logger.Debug("action", "executing",
+			"full text", m.Content)
+		var args []string
+		if len(parts) > 1 {
+			args = parts[1:]
+		}
+		cmd.Run(m, args)
+	}(m)
+}
+
+func (cl *List) handleHelpCommand(bot *hbot.Bot, m *hbot.Message, parts []string) {
+	if len(parts) < 2 {
+		cl.showAllCommands(bot, m)
+	} else {
+		cl.showSpecificCommand(bot, m, parts[1])
+	}
+}
+
+func (cl *List) showAllCommands(bot *hbot.Bot, m *hbot.Message) {
+	bot.Msg(m.From, "Voici ce que je peux faire:")
+
+	var commands bytes.Buffer
+	i := 0
+	for _, cmd := range cl.Commands {
+		i++
+		commands.WriteString(cmd.Name)
+		if i != len(cl.Commands) {
+			commands.WriteString(", ")
+		}
+	}
+
+	bot.Msg(m.From, commands.String())
+	bot.Msg(m.From, fmt.Sprintf("Le préfixe de toutes ces commandes est: \"%s\"", cl.Prefix))
+	bot.Msg(m.From, fmt.Sprintf("Tapez %shelp <commande> pour plus de détails", cl.Prefix))
+}
+
+func (cl *List) showSpecificCommand(bot *hbot.Bot, m *hbot.Message, cmdName string) {
+	cmd, exists := cl.Commands[strings.ToLower(cmdName)]
+	if exists {
+		bot.Msg(m.From, fmt.Sprintf("%s: %s", cmd.Description, cmd.Usage))
+	} else {
+		bot.Msg(m.From, fmt.Sprintf("Commande inconnue: %s", cmdName))
+	}
+}
+
+func (cl *List) handleURLDetection(bot *hbot.Bot, m *hbot.Message) {
+	urlPattern := regexp.MustCompile(`https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)`)
+
+	if urlPattern.MatchString(m.Content) {
+		matches := urlPattern.FindStringSubmatch(m.Content)
+		if len(matches) > 0 {
+			url := matches[0]
 			go func(bot *hbot.Bot, m *hbot.Message, url string) {
 				RetrievePageTitle(bot, m, url)
 			}(bot, m, url)
 		}
-
 	}
 }
