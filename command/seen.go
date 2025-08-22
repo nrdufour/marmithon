@@ -77,7 +77,21 @@ func GetUserSeen(nickname string) (time.Time, string, string, error) {
 		return time.Time{}, "", "", fmt.Errorf("erreur lors de la récupération: %w", err)
 	}
 
-	lastSeen, err := time.Parse("2006-01-02 15:04:05", lastSeenStr)
+	// Try multiple time formats that SQLite might return
+	var lastSeen time.Time
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04:05.000000",
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04:05Z",
+	}
+	
+	for _, format := range formats {
+		if lastSeen, err = time.Parse(format, lastSeenStr); err == nil {
+			break
+		}
+	}
+	
 	if err != nil {
 		return time.Time{}, "", "", fmt.Errorf("erreur de parsing de la date: %w", err)
 	}
