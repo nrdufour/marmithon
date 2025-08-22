@@ -11,10 +11,6 @@ import (
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 var seenDB *sql.DB
 
 // InitSeenDB initializes the SQLite database for tracking user activity
