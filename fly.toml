@@ -7,7 +7,7 @@ app = 'marmithon'
 primary_region = 'ewr'
 
 [build]
-  dockerfile = './Dockerfile.fly'
+  dockerfile = './Dockerfile'
 
 [[vm]]
   size = 'shared-cpu-1x'
