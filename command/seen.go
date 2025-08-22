@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
