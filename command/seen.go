@@ -20,7 +20,7 @@ var seenDB *sql.DB
 // InitSeenDB initializes the SQLite database for tracking user activity
 func InitSeenDB(dbPath string) error {
 	var err error
-	seenDB, err = sql.Open("sqlite3", dbPath)
+	seenDB, err = sql.Open("sqlite", dbPath)
 	if err != nil {
 		return fmt.Errorf("erreur lors de l'ouverture de la base de données: %w", err)
 	}
