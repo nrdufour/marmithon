@@ -12,5 +12,6 @@
       go-task
       unstable.claude-code
       jq
+      sqlite
     ];
 }
