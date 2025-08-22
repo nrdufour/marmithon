@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"marmithon/command"
 	"marmithon/config"
@@ -59,6 +60,11 @@ func run() error {
 	bot.AddTrigger(CommandTrigger)
 	bot.Logger.SetHandler(log15.StdoutHandler)
 
+	// Initialize the seen database
+	if err := command.InitSeenDB("seen.db"); err != nil {
+		return fmt.Errorf("erreur lors de l'initialisation de la base seen: %w", err)
+	}
+
 	setupCommands()
 
 	log.Println("Démarrage du bot...")
@@ -108,6 +114,13 @@ func setupCommands() {
 		Description: "Affiche la version du bot",
 		Usage:       "!version",
 		Run:         core.ShowVersion,
+	})
+
+	cmdList.AddCommand(command.Command{
+		Name:        "seen",
+		Description: "Indique quand un utilisateur a été vu pour la dernière fois",
+		Usage:       "!seen <pseudo>",
+		Run:         core.Seen,
 	})
 
 	if _, err := os.Stat("/data/airports.csv"); err == nil {

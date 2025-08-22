@@ -8,8 +8,8 @@ require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
+	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
-	golang.org/x/text v0.26.0
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
 )
 

@@ -45,6 +45,15 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 		return
 	}
 
+	// Track user activity for the !seen command (don't track bot's own messages)
+	if m.From != bot.Nick {
+		go func() {
+			if err := UpdateUserSeen(m.From, m.To, m.Content); err != nil {
+				bot.Logger.Debug("seen tracking error", "error", err.Error())
+			}
+		}()
+	}
+
 	if m.Content[0:1] == cl.Prefix {
 		cl.handleCommand(bot, m)
 	} else {
