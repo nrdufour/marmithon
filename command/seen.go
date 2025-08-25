@@ -95,6 +95,71 @@ func GetUserSeen(nickname string) (time.Time, string, string, error) {
 	return lastSeen, channel, lastMessage, nil
 }
 
+// SearchUsersSeen retrieves users matching a wildcard pattern
+func SearchUsersSeen(pattern string) ([]struct{
+	Nickname string
+	Channel string
+	LastSeen time.Time
+	LastMessage string
+}, error) {
+	if seenDB == nil {
+		return nil, fmt.Errorf("base de données non initialisée")
+	}
+
+	// Convert shell-style wildcards to SQL LIKE patterns
+	sqlPattern := strings.ReplaceAll(pattern, "*", "%")
+	sqlPattern = strings.ReplaceAll(sqlPattern, "?", "_")
+	
+	query := `SELECT nickname, channel, last_seen_at, last_message FROM user_seen WHERE nickname LIKE ? COLLATE NOCASE ORDER BY last_seen_at DESC LIMIT 10`
+	
+	rows, err := seenDB.Query(query, strings.ToLower(sqlPattern))
+	if err != nil {
+		return nil, fmt.Errorf("erreur lors de la recherche: %w", err)
+	}
+	defer rows.Close()
+
+	var results []struct{
+		Nickname string
+		Channel string
+		LastSeen time.Time
+		LastMessage string
+	}
+
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04:05.000000",
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04:05Z",
+	}
+
+	for rows.Next() {
+		var nickname, channel, lastSeenStr, lastMessage string
+		err := rows.Scan(&nickname, &channel, &lastSeenStr, &lastMessage)
+		if err != nil {
+			continue
+		}
+
+		var lastSeen time.Time
+		for _, format := range formats {
+			if lastSeen, err = time.Parse(format, lastSeenStr); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			continue
+		}
+
+		results = append(results, struct{
+			Nickname string
+			Channel string
+			LastSeen time.Time
+			LastMessage string
+		}{nickname, channel, lastSeen, lastMessage})
+	}
+
+	return results, nil
+}
+
 // GetRandomPresentResponse returns a random humorous response for when a user is currently present
 func GetRandomPresentResponse(nickname string) string {
 	responses := []string{
@@ -165,7 +230,7 @@ func FormatTimeDifference(then time.Time) string {
 // Seen handles the !seen command
 func (core Core) Seen(m *hbot.Message, args []string) {
 	if len(args) < 1 {
-		core.Bot.Reply(m, "Dis-moi qui tu cherches ! Usage: !seen <pseudo>")
+		core.Bot.Reply(m, "Dis-moi qui tu cherches ! Usage: !seen <pseudo> (supports wildcards like dsp*)")
 		return
 	}
 
@@ -181,8 +246,57 @@ func (core Core) Seen(m *hbot.Message, args []string) {
 		return
 	}
 
-	// Check if the target user is currently present in the channel
-	// We'll do a simple check by looking at recent activity (within last 5 minutes)
+	// Check if this is a wildcard search
+	if strings.Contains(targetNick, "*") || strings.Contains(targetNick, "?") {
+		results, err := SearchUsersSeen(targetNick)
+		if err != nil {
+			core.Bot.Reply(m, "Erreur lors de la recherche, désolé !")
+			return
+		}
+
+		if len(results) == 0 {
+			core.Bot.Reply(m, fmt.Sprintf("Aucun utilisateur trouvé correspondant à '%s'", targetNick))
+			return
+		}
+
+		if len(results) == 1 {
+			// Single result, format like a normal !seen response
+			result := results[0]
+			timeDiff := time.Now().Sub(result.LastSeen)
+			if timeDiff < 5*time.Minute {
+				core.Bot.Reply(m, GetRandomPresentResponse(result.Nickname))
+				return
+			}
+
+			timeDiffStr := FormatTimeDifference(result.LastSeen)
+			response := fmt.Sprintf("%s a été vu.e pour la dernière fois sur %s %s", 
+				result.Nickname, result.Channel, timeDiffStr)
+			
+			if len(result.LastMessage) > 0 && len(result.LastMessage) < 100 {
+				response += fmt.Sprintf(" en disant: \"%s\"", result.LastMessage)
+			}
+			core.Bot.Reply(m, response)
+			return
+		}
+
+		// Multiple results, show a summary
+		var responseLines []string
+		responseLines = append(responseLines, fmt.Sprintf("Utilisateurs correspondant à '%s':", targetNick))
+		
+		for i, result := range results {
+			if i >= 5 { // Limit to first 5 results
+				responseLines = append(responseLines, fmt.Sprintf("... et %d autre(s)", len(results)-i))
+				break
+			}
+			timeDiffStr := FormatTimeDifference(result.LastSeen)
+			responseLines = append(responseLines, fmt.Sprintf("• %s sur %s %s", result.Nickname, result.Channel, timeDiffStr))
+		}
+		
+		core.Bot.Reply(m, strings.Join(responseLines, " "))
+		return
+	}
+
+	// Standard exact search
 	lastSeen, channel, lastMessage, err := GetUserSeen(targetNick)
 	if err != nil {
 		if strings.Contains(err.Error(), "jamais vu") {
