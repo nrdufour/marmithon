@@ -60,8 +60,13 @@ func run() error {
 	bot.AddTrigger(CommandTrigger)
 	bot.Logger.SetHandler(log15.StdoutHandler)
 
+	// Ensure data directory exists
+	if err := os.MkdirAll("/data", 0755); err != nil {
+		return fmt.Errorf("erreur lors de la création du répertoire /data: %w", err)
+	}
+
 	// Initialize the seen database
-	if err := command.InitSeenDB("seen.db"); err != nil {
+	if err := command.InitSeenDB("/data/seen.db"); err != nil {
 		return fmt.Errorf("erreur lors de l'initialisation de la base seen: %w", err)
 	}
 

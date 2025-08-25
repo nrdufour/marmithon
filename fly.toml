@@ -11,3 +11,7 @@ primary_region = 'ewr'
 
 [[vm]]
   size = 'shared-cpu-1x'
+
+[[mounts]]
+  source = 'marmithon_data'
+  destination = '/data'
