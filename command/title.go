@@ -67,6 +67,7 @@ var platformExtractors = []PlatformExtractor{
 	{"Vimeo", regexp.MustCompile(`(?i)(www\.)?vimeo\.com`), GetVimeoTitle},
 	{"Dailymotion", regexp.MustCompile(`(?i)(www\.)?dailymotion\.com`), GetDailymotionTitle},
 	{"Twitch", regexp.MustCompile(`(?i)(www\.)?twitch\.tv`), GetTwitchTitle},
+	{"Yahoo", regexp.MustCompile(`(?i)(www\.)?yahoo\.(com|fr)`), GetYahooTitle},
 }
 
 func GetYoutubeTitle(r io.Reader) (string, error) {
@@ -178,6 +179,34 @@ func GetTwitchTitle(r io.Reader) (string, error) {
 	return "", fmt.Errorf("titre Twitch introuvable")
 }
 
+func GetYahooTitle(r io.Reader) (string, error) {
+	limitedReader := io.LimitReader(r, maxContentLength)
+	buf := new(strings.Builder)
+	_, err := io.Copy(buf, limitedReader)
+	if err != nil {
+		return "", fmt.Errorf("impossible de lire la réponse: %w", err)
+	}
+
+	content := buf.String()
+	patterns := []*regexp.Regexp{
+		regexp.MustCompile(`<meta property="og:title" content="([^"]+)"`),
+		regexp.MustCompile(`<meta name="twitter:title" content="([^"]+)"`),
+		regexp.MustCompile(`<title>([^<]+)</title>`),
+		regexp.MustCompile(`"title":"([^"]+)"`),
+	}
+
+	for _, pattern := range patterns {
+		if matches := pattern.FindStringSubmatch(content); len(matches) >= 2 {
+			title := strings.TrimSpace(matches[1])
+			if title != "" && !strings.Contains(strings.ToLower(title), "yahoo") {
+				return cleanTitle(title), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("titre Yahoo introuvable")
+}
+
 func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	if url == "" {
 		bot.Reply(m, "URL invalide fournie")
@@ -193,7 +222,6 @@ func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	title, err := fetchPageTitle(url)
 	if err != nil {
 		fmt.Printf("Title extraction error for %s: %s\n", url, err)
-		bot.Reply(m, "Impossible d'extraire le titre")
 		return
 	}
 
@@ -225,9 +253,24 @@ func fetchPageTitle(url string) (string, error) {
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 	}
-	req.Header.Set("User-Agent", userAgents[0]) // Use first one for now
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "fr-FR,fr;q=0.9,en;q=0.8")
+	
+	// Special handling for Yahoo domains
+	if strings.Contains(url, "yahoo.com") || strings.Contains(url, "yahoo.fr") {
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+		req.Header.Set("Accept-Language", "en-US,en;q=0.9,fr;q=0.8")
+		req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Set("Cache-Control", "max-age=0")
+		req.Header.Set("Sec-Fetch-Dest", "document")
+		req.Header.Set("Sec-Fetch-Mode", "navigate")
+		req.Header.Set("Sec-Fetch-Site", "none")
+		req.Header.Set("Sec-Fetch-User", "?1")
+		req.Header.Set("Upgrade-Insecure-Requests", "1")
+	} else {
+		req.Header.Set("User-Agent", userAgents[0]) // Use first one for now
+		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+		req.Header.Set("Accept-Language", "fr-FR,fr;q=0.9,en;q=0.8")
+	}
 	req.Header.Set("DNT", "1")
 	req.Header.Set("Connection", "keep-alive")
 
