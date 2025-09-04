@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/earthboundkid/versioninfo/v2"
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
@@ -87,10 +86,13 @@ func (core Core) GetCVE(m *hbot.Message, args []string) {
 	}
 }
 
+var (
+	GitCommit = "dev"
+	BuildTime = "unknown"
+)
+
 func (core Core) ShowVersion(m *hbot.Message, args []string) {
-	core.Bot.Reply(m, fmt.Sprintf("Version: %s -- Dernier commit: %s",
-		versioninfo.Short(),
-		versioninfo.LastCommit))
+	core.Bot.Reply(m, fmt.Sprintf("Version: %s -- Build: %s", GitCommit, BuildTime))
 }
 
 func validateCVE(cve string) error {

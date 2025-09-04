@@ -2,11 +2,13 @@ FROM docker.io/library/golang:1.25.1-alpine3.21 as build
 
 WORKDIR /marmithon
 
-## git is needed for the go build process with the library github.com/earthboundkid/versioninfo
+## git is needed to get commit info for version
 RUN apk update && apk add --no-cache \
     git
 COPY . .
-RUN go build -ldflags="-s -w"
+RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
+    BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC") && \
+    go build -ldflags="-s -w -X 'marmithon/command.GitCommit=${COMMIT}' -X 'marmithon/command.BuildTime=${BUILD_TIME}'"
 
 # -----------------------------------------------------------------------------
 FROM gcr.io/distroless/static:nonroot
