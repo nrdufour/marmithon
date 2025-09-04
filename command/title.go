@@ -67,6 +67,7 @@ var platformExtractors = []PlatformExtractor{
 	{"Vimeo", regexp.MustCompile(`(?i)(www\.)?vimeo\.com`), GetVimeoTitle},
 	{"Dailymotion", regexp.MustCompile(`(?i)(www\.)?dailymotion\.com`), GetDailymotionTitle},
 	{"Twitch", regexp.MustCompile(`(?i)(www\.)?twitch\.tv`), GetTwitchTitle},
+	{"Yahoo", regexp.MustCompile(`(?i)(www\.)?yahoo\.(com|fr)`), GetYahooTitle},
 }
 
 func GetYoutubeTitle(r io.Reader) (string, error) {
@@ -178,6 +179,9 @@ func GetTwitchTitle(r io.Reader) (string, error) {
 	return "", fmt.Errorf("titre Twitch introuvable")
 }
 
+func GetYahooTitle(r io.Reader) (string, error) {
+	return "Yahoo, c'est de la merrddeuuhhh", nil
+}
 
 func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 	if url == "" {
