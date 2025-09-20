@@ -134,4 +134,11 @@ func setupCommands() {
 		Usage:       "!icao lille FR",
 		Run:         core.SearchForOACI,
 	})
+
+	cmdList.AddCommand(command.Command{
+		Name:        "distance",
+		Description: "Calcule la distance entre deux aéroports en codes ICAO",
+		Usage:       "!distance LFLL EGLL",
+		Run:         core.CalculateDistance,
+	})
 }

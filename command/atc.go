@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	hbot "github.com/whyrusleeping/hellabot"
 )
@@ -18,6 +19,10 @@ type Airport struct {
 type APIResponse struct {
 	Airports []Airport `json:"airports"`
 	Count    int       `json:"count"`
+}
+
+type DistanceResponse struct {
+	Distance float64 `json:"distance"`
 }
 
 func (core Core) SearchForOACI(m *hbot.Message, args []string) {
@@ -103,4 +108,57 @@ func (core Core) searchAirports(searchTerm, countryLimiter string, maxResults in
 	}
 
 	return validAirports, nil
+}
+
+func (core Core) CalculateDistance(m *hbot.Message, args []string) {
+	if len(args) != 2 {
+		core.Bot.Reply(m, "Usage: !distance <departure_ICAO> <destination_ICAO>")
+		return
+	}
+
+	departure := strings.ToUpper(args[0])
+	destination := strings.ToUpper(args[1])
+
+	if len(departure) != 4 || len(destination) != 4 {
+		core.Bot.Reply(m, "Les codes ICAO doivent contenir exactement 4 caractères")
+		return
+	}
+
+	distance, err := core.getDistance(departure, destination)
+	if err != nil {
+		core.Bot.Reply(m, fmt.Sprintf("Erreur lors du calcul de la distance: %s", err.Error()))
+		return
+	}
+
+	core.Bot.Reply(m, fmt.Sprintf("Distance entre %s et %s: %.0f milles nautiques", departure, destination, distance))
+}
+
+func (core Core) getDistance(departure, destination string) (float64, error) {
+	baseURL := fmt.Sprintf("%s/distance", core.Config.AirportAPIURL)
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return 0, fmt.Errorf("URL invalide: %w", err)
+	}
+
+	q := u.Query()
+	q.Set("departure", departure)
+	q.Set("destination", destination)
+	u.RawQuery = q.Encode()
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return 0, fmt.Errorf("erreur lors de la requête HTTP: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("réponse HTTP %d", resp.StatusCode)
+	}
+
+	var response DistanceResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return 0, fmt.Errorf("erreur lors du décodage JSON: %w", err)
+	}
+
+	return response.Distance, nil
 }
