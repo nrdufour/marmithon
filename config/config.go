@@ -23,6 +23,12 @@ func FromFile(configFile string) (Config, error) {
 	if _, err := toml.DecodeFile(configFile, &config); err != nil {
 		return Config{}, fmt.Errorf("erreur lors du décodage du fichier de configuration: %w", err)
 	}
+	
+	// Set default airport API URL if not configured
+	if config.AirportAPIURL == "" {
+		config.AirportAPIURL = "https://ask.fly.dev"
+	}
+	
 	return config, nil
 }
 
@@ -33,6 +39,7 @@ type Config struct {
 	ServerPassword string
 	Channels       []string
 	SSL            bool
+	AirportAPIURL  string
 }
 
 // ValidateConfig checks that the config object has all the values it should.

@@ -1,26 +1,23 @@
 package command
 
 import (
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"strings"
+	"net/http"
+	"net/url"
 
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
 type Airport struct {
-	OACI    string
-	Name    string
-	Country string
+	ICAO    string `json:"icao_code"`
+	Name    string `json:"name"`
+	Country string `json:"iso_country"`
 }
 
-func ContainsI(a string, b string) bool {
-	return strings.Contains(
-		strings.ToLower(a),
-		strings.ToLower(b),
-	)
+type APIResponse struct {
+	Airports []Airport `json:"airports"`
+	Count    int       `json:"count"`
 }
 
 func (core Core) SearchForOACI(m *hbot.Message, args []string) {
@@ -31,104 +28,79 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 
 	searchingFor := args[0]
 	countryLimiter := ""
-	limit := 5
-
 	if len(args) == 2 {
 		countryLimiter = args[1]
 	}
 
-	f, err := os.Open("/data/airports.csv")
+	airports, err := core.searchAirports(searchingFor, countryLimiter, 10)
 	if err != nil {
-		core.Bot.Reply(m, "Désolé, je ne peux lire ma base d'aéroports!")
+		core.Bot.Reply(m, fmt.Sprintf("Désolé, erreur lors de la recherche: %s", err.Error()))
 		return
 	}
-	defer f.Close()
 
-	r := csv.NewReader(f)
-	counter := 0
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			core.Bot.Reply(m, "Désolé, je ne peux lire ma base d'aéroports!")
-			return
-		}
-
-		oaci := record[1]
-		name := record[3]
-		country := record[8]
-
-		if ContainsI(name, searchingFor) && len(oaci) == 4 {
-			if countryLimiter != "" {
-				if country != countryLimiter {
-					continue
-				}
-			}
-			if counter <= limit {
-				core.Bot.Reply(m, fmt.Sprintf("%s : %s (%s)", oaci, name, country))
-			}
-			counter++
-		}
+	if len(airports) == 0 {
+		core.Bot.Reply(m, "Désolé, je n'ai pas trouvé d'aéroports")
+		return
 	}
 
-	if counter == 0 {
-		core.Bot.Reply(m, "Désolé, je n'ai pas trouvé d'aéroports")
-	} else {
-		if counter > limit {
-			core.Bot.Reply(m, fmt.Sprintf("--- Total: %d (limit: %d)", counter, limit))
-		} else {
-			core.Bot.Reply(m, fmt.Sprintf("--- Total: %d", counter))
+	// Limit to 10 results to avoid flooding
+	limit := 10
+	displayed := 0
+	for _, airport := range airports {
+		if displayed >= limit {
+			break
 		}
+		core.Bot.Reply(m, fmt.Sprintf("%s : %s (%s)", airport.ICAO, airport.Name, airport.Country))
+		displayed++
+	}
+
+	if len(airports) > limit {
+		core.Bot.Reply(m, fmt.Sprintf("--- Total: %d (limit: %d)", len(airports), limit))
+	} else {
+		core.Bot.Reply(m, fmt.Sprintf("--- Total: %d", len(airports)))
 	}
 }
 
-func searchAirports(searchTerm, countryLimiter string, maxResults int) ([]Airport, error) {
-	f, err := os.Open("/data/airports.csv")
+func (core Core) searchAirports(searchTerm, countryLimiter string, maxResults int) ([]Airport, error) {
+	// Build the URL
+	baseURL := fmt.Sprintf("%s/api/airport/search", core.Config.AirportAPIURL)
+	u, err := url.Parse(baseURL)
 	if err != nil {
-		return nil, fmt.Errorf("impossible d'ouvrir la base de données d'aéroports: %w", err)
-	}
-	defer f.Close()
-
-	r := csv.NewReader(f)
-	var airports []Airport
-
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("erreur lors de la lecture de la base de données: %w", err)
-		}
-
-		if len(record) < 9 {
-			continue
-		}
-
-		oaci := strings.TrimSpace(record[1])
-		name := strings.TrimSpace(record[3])
-		country := strings.TrimSpace(record[8])
-
-		if len(oaci) != 4 || name == "" {
-			continue
-		}
-
-		if !ContainsI(name, searchTerm) {
-			continue
-		}
-
-		if countryLimiter != "" && strings.ToUpper(country) != countryLimiter {
-			continue
-		}
-
-		airports = append(airports, Airport{
-			OACI:    oaci,
-			Name:    name,
-			Country: country,
-		})
+		return nil, fmt.Errorf("URL invalide: %w", err)
 	}
 
-	return airports, nil
+	// Add query parameters
+	q := u.Query()
+	q.Set("name", searchTerm)
+	if countryLimiter != "" {
+		q.Set("country", countryLimiter)
+	}
+	u.RawQuery = q.Encode()
+
+	// Make the HTTP request
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, fmt.Errorf("erreur lors de la requête HTTP: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("réponse HTTP %d", resp.StatusCode)
+	}
+
+	// Parse the JSON response
+	var response APIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("erreur lors du décodage JSON: %w", err)
+	}
+
+	// Filter out airports without valid ICAO codes
+	var validAirports []Airport
+	for _, airport := range response.Airports {
+		if len(airport.ICAO) == 4 && airport.Name != "" {
+			validAirports = append(validAirports, airport)
+		}
+	}
+
+	return validAirports, nil
 }

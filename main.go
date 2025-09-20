@@ -128,12 +128,10 @@ func setupCommands() {
 		Run:         core.Seen,
 	})
 
-	if _, err := os.Stat("/data/airports.csv"); err == nil {
-		cmdList.AddCommand(command.Command{
-			Name:        "oaci",
-			Description: "Trouve un aéroport par nom avec code pays optionnel",
-			Usage:       "!oaci lille FR",
-			Run:         core.SearchForOACI,
-		})
-	}
+	cmdList.AddCommand(command.Command{
+		Name:        "icao",
+		Description: "Trouve un aéroport par nom avec code pays optionnel",
+		Usage:       "!icao lille FR",
+		Run:         core.SearchForOACI,
+	})
 }
