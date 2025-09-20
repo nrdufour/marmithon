@@ -22,7 +22,7 @@ type APIResponse struct {
 }
 
 type DistanceResponse struct {
-	Distance float64 `json:"distance"`
+	Distance float64 `json:"distance_nm"`
 }
 
 func (core Core) SearchForOACI(m *hbot.Message, args []string) {
@@ -134,7 +134,7 @@ func (core Core) CalculateDistance(m *hbot.Message, args []string) {
 }
 
 func (core Core) getDistance(departure, destination string) (float64, error) {
-	baseURL := fmt.Sprintf("%s/distance", core.Config.AirportAPIURL)
+	baseURL := fmt.Sprintf("%s/api/airport/distance", core.Config.AirportAPIURL)
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return 0, fmt.Errorf("URL invalide: %w", err)
