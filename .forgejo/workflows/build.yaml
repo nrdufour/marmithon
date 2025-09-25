@@ -19,8 +19,6 @@ jobs:
         shell: bash
         run: |
           echo "BUILD_TAG=main-${GITHUB_SHA:0:7}-$(date +%s)" >> $GITHUB_ENV
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -40,3 +38,6 @@ jobs:
           tags: |
             forge.internal/nemo/marmitton:latest
             forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}
+          build-args: |
+            TARGETARCH=arm64
+            TARGETOS=linux
