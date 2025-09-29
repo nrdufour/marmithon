@@ -60,13 +60,19 @@ func run() error {
 	bot.AddTrigger(CommandTrigger)
 	bot.Logger.SetHandler(log15.StdoutHandler)
 
-	// Ensure data directory exists
-	if err := os.MkdirAll("/data", 0755); err != nil {
-		return fmt.Errorf("erreur lors de la création du répertoire /data: %w", err)
+	// Determine data directory with fallback
+	dataDir := "/data"
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		log.Printf("Cannot create %s directory, falling back to /tmp: %v", dataDir, err)
+		dataDir = "/tmp"
+		if err := os.MkdirAll(dataDir, 0755); err != nil {
+			return fmt.Errorf("erreur lors de la création du répertoire de fallback %s: %w", dataDir, err)
+		}
 	}
 
 	// Initialize the seen database
-	if err := command.InitSeenDB("/data/seen.db"); err != nil {
+	dbPath := dataDir + "/seen.db"
+	if err := command.InitSeenDB(dbPath); err != nil {
 		return fmt.Errorf("erreur lors de l'initialisation de la base seen: %w", err)
 	}
 
