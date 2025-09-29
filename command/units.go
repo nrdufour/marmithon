@@ -14,6 +14,7 @@ const (
 	Distance UnitType = iota
 	Weight
 	Volume
+	Temperature
 )
 
 type Unit struct {
@@ -23,17 +24,45 @@ type Unit struct {
 }
 
 var KnownUnits = map[string]Unit{
+	// Distance
 	"m":  {"mètre", "m", Distance},
 	"ft": {"feet", "ft", Distance},
+	"km": {"kilomètre", "km", Distance},
+	"nm": {"nautical mile", "nm", Distance},
+
+	// Weight
+	"kg": {"kilogramme", "kg", Weight},
+	"lb": {"pound", "lb", Weight},
+
+	// Volume
+	"l":   {"litre", "l", Volume},
+	"gal": {"gallon", "gal", Volume},
+
+	// Temperature
+	"c": {"Celsius", "°C", Temperature},
+	"f": {"Fahrenheit", "°F", Temperature},
 }
 
 type Conversion struct {
 	Factor float64
+	Offset float64 // For temperature conversions
 	// maybe more later on
 }
 
 var ConversionTable = map[string]Conversion{
-	"ft/m": {0.3048},
+	// Distance conversions
+	"ft/m":  {0.3048, 0},
+	"km/m":  {1000, 0},
+	"km/nm": {1.852, 0},
+
+	// Weight conversions
+	"kg/lb": {2.20462, 0},
+
+	// Volume conversions (US gallon)
+	"gal/l": {3.78541, 0},
+
+	// Temperature conversions (special handling needed)
+	"c/f": {1.8, 32}, // F = C * 1.8 + 32
 }
 
 func (core Core) ShowKnownUnits(m *hbot.Message) {
@@ -69,11 +98,26 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	conversion, exists := ConversionTable[conversionId]
 	if exists {
 		var newValue float64
-		if reverseConversion {
-			newValue = value / conversion.Factor
+
+		// Special handling for temperature conversions
+		originUnit := KnownUnits[unitOriginRaw]
+		if originUnit.Type == Temperature {
+			if reverseConversion {
+				// Converting from F to C: C = (F - 32) / 1.8
+				newValue = (value - conversion.Offset) / conversion.Factor
+			} else {
+				// Converting from C to F: F = C * 1.8 + 32
+				newValue = value*conversion.Factor + conversion.Offset
+			}
 		} else {
-			newValue = value * conversion.Factor
+			// Standard linear conversion
+			if reverseConversion {
+				newValue = value / conversion.Factor
+			} else {
+				newValue = value * conversion.Factor
+			}
 		}
+
 		core.Bot.Reply(m, fmt.Sprintf("%.2f %s est égal à %.2f %s", value, unitOriginRaw, newValue, unitDestRaw))
 	} else {
 		core.Bot.Reply(m, "Désolé, je ne connais pas encore cette conversion")
@@ -112,6 +156,19 @@ func performConversion(value float64, unitOrigin, unitDest string) (float64, err
 		return 0, errors.New("désolé, je ne connais pas encore cette conversion")
 	}
 
+	// Special handling for temperature conversions
+	originUnit := KnownUnits[unitOrigin]
+	if originUnit.Type == Temperature {
+		if reverseConversion {
+			// Converting from F to C: C = (F - 32) / 1.8
+			return (value - conversion.Offset) / conversion.Factor, nil
+		} else {
+			// Converting from C to F: F = C * 1.8 + 32
+			return value*conversion.Factor + conversion.Offset, nil
+		}
+	}
+
+	// Standard linear conversion
 	if reverseConversion {
 		return value / conversion.Factor, nil
 	}
