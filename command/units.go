@@ -39,8 +39,8 @@ var KnownUnits = map[string]Unit{
 	"gal": {"gallon", "gal", Volume},
 
 	// Temperature
-	"c": {"Celsius", "°C", Temperature},
-	"f": {"Fahrenheit", "°F", Temperature},
+	"C": {"Celsius", "°C", Temperature},
+	"F": {"Fahrenheit", "°F", Temperature},
 }
 
 type Conversion struct {
