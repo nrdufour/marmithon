@@ -9,9 +9,21 @@ import (
 	hbot "github.com/whyrusleeping/hellabot"
 )
 
+// Custom units that go-units doesn't support
+// Using a simpler approach without creating Unit objects to avoid conflicts
+var customUnitNames = []string{"nmi", "nautical", "nauticalmile"}
+
+// Custom conversions for units not in go-units
+var customConversions = map[string]float64{
+	"km_to_nmi": 1.0 / 1.852,    // 1 km = 1/1.852 nautical miles
+	"nmi_to_km": 1.852,          // 1 nautical mile = 1.852 km
+	"m_to_nmi":  1.0 / 1852.0,   // 1 meter = 1/1852 nautical miles
+	"nmi_to_m":  1852.0,         // 1 nautical mile = 1852 meters
+}
+
 func (core Core) ShowKnownUnits(m *hbot.Message) {
 	core.Bot.Reply(m, "🔧 Unités disponibles (exemples):")
-	core.Bot.Reply(m, "📏 Distance: m, km, ft, mi, in, cm, mm")
+	core.Bot.Reply(m, "📏 Distance: m, km, ft, mi, in, cm, mm, nmi")
 	core.Bot.Reply(m, "⚖️  Poids: kg, g, lb, oz, ton")
 	core.Bot.Reply(m, "🌡️  Température: C, F, K")
 	core.Bot.Reply(m, "📦 Volume: l, ml, gal, qt, pt")
@@ -44,7 +56,14 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	unitFrom := strings.TrimSpace(args[1])
 	unitTo := strings.TrimSpace(args[2])
 
-	// Find the units
+	// Try custom conversion first (for nautical miles, etc.)
+	if result, ok := core.tryCustomConversion(value, unitFrom, unitTo); ok {
+		precision := determinePrecision(result)
+		core.Bot.Reply(m, fmt.Sprintf("✅ %.2f %s = %.*f %s", value, unitFrom, precision, result, unitTo))
+		return
+	}
+
+	// Find the units in the standard library
 	fromUnit, err := u.Find(unitFrom)
 	if err != nil {
 		core.Bot.Reply(m, fmt.Sprintf("❌ Unité source inconnue: '%s'", unitFrom))
@@ -74,6 +93,56 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	core.Bot.Reply(m, fmt.Sprintf("✅ %.2f %s = %.*f %s", value, unitFrom, precision, result, unitTo))
 }
 
+// tryCustomConversion handles conversions for custom units like nautical miles
+func (core Core) tryCustomConversion(value float64, unitFrom, unitTo string) (float64, bool) {
+	unitFrom = strings.ToLower(unitFrom)
+	unitTo = strings.ToLower(unitTo)
+
+	// Normalize unit names
+	if unitFrom == "nautical" || unitFrom == "nauticalmile" {
+		unitFrom = "nmi"
+	}
+	if unitTo == "nautical" || unitTo == "nauticalmile" {
+		unitTo = "nmi"
+	}
+
+	// Check for direct custom conversions
+	conversionKey := fmt.Sprintf("%s_to_%s", unitFrom, unitTo)
+	if factor, exists := customConversions[conversionKey]; exists {
+		return value * factor, true
+	}
+
+	// Check for reverse conversions
+	reverseKey := fmt.Sprintf("%s_to_%s", unitTo, unitFrom)
+	if factor, exists := customConversions[reverseKey]; exists {
+		return value / factor, true
+	}
+
+	// Try intermediate conversions through meters for nautical miles
+	if unitFrom == "nmi" {
+		// nmi -> meters -> target
+		meters := value * 1852.0
+		if unitTo == "km" {
+			return meters / 1000.0, true
+		} else if unitTo == "m" || unitTo == "meter" {
+			return meters, true
+		}
+	} else if unitTo == "nmi" {
+		// source -> meters -> nmi
+		var meters float64
+		if unitFrom == "km" || unitFrom == "kilometer" {
+			meters = value * 1000.0
+		} else if unitFrom == "m" || unitFrom == "meter" {
+			meters = value
+		} else {
+			return 0, false
+		}
+		return meters / 1852.0, true
+	}
+
+	return 0, false
+}
+
 // SearchUnits helps users find available units
 func (core Core) SearchUnits(m *hbot.Message, searchTerm string) {
 	searchTerm = strings.ToLower(searchTerm)
@@ -88,9 +157,18 @@ func (core Core) SearchUnits(m *hbot.Message, searchTerm string) {
 		}
 	}
 
-	if len(matches) == 0 {
+	// Check for custom units separately
+	var customMatches []string
+	for _, name := range customUnitNames {
+		if strings.Contains(strings.ToLower(name), searchTerm) ||
+			strings.Contains("nautical mile", searchTerm) {
+			customMatches = append(customMatches, name)
+		}
+	}
+
+	if len(matches) == 0 && len(customMatches) == 0 {
 		core.Bot.Reply(m, fmt.Sprintf("❌ Aucune unité trouvée pour '%s'", searchTerm))
-		core.Bot.Reply(m, "💡 Essayez: meter, gram, celsius, liter, joule, byte")
+		core.Bot.Reply(m, "💡 Essayez: meter, gram, celsius, liter, joule, byte, nmi")
 		return
 	}
 
@@ -101,6 +179,9 @@ func (core Core) SearchUnits(m *hbot.Message, searchTerm string) {
 	core.Bot.Reply(m, fmt.Sprintf("🔍 Unités trouvées pour '%s':", searchTerm))
 	for _, unit := range matches {
 		core.Bot.Reply(m, fmt.Sprintf("  • %s (%s)", unit.Name, unit.Symbol))
+	}
+	for _, customUnit := range customMatches {
+		core.Bot.Reply(m, fmt.Sprintf("  • nautical mile (%s) - distance", customUnit))
 	}
 }
 
@@ -159,6 +240,13 @@ func determinePrecision(value float64) int {
 
 // PerformConversion is a wrapper for external testing
 func PerformConversion(value float64, unitOrigin, unitDest string) (float64, error) {
+	// Try custom conversion first
+	core := Core{} // dummy core for method access
+	if result, ok := core.tryCustomConversion(value, unitOrigin, unitDest); ok {
+		return result, nil
+	}
+
+	// Fall back to standard library
 	fromUnit, err := u.Find(unitOrigin)
 	if err != nil {
 		return 0, err
