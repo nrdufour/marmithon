@@ -62,7 +62,7 @@ var ConversionTable = map[string]Conversion{
 	"gal/l": {3.78541, 0},
 
 	// Temperature conversions (special handling needed)
-	"c/f": {1.8, 32}, // F = C * 1.8 + 32
+	"C/F": {1.8, 32}, // F = C * 1.8 + 32
 }
 
 func (core Core) ShowKnownUnits(m *hbot.Message) {
@@ -140,7 +140,7 @@ func validateUnits(unitOrigin, unitDest string) error {
 	return nil
 }
 
-func performConversion(value float64, unitOrigin, unitDest string) (float64, error) {
+func PerformConversion(value float64, unitOrigin, unitDest string) (float64, error) {
 	var conversionId string
 	var reverseConversion bool
 
