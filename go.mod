@@ -2,11 +2,12 @@ module marmithon
 
 go 1.23.0
 
-toolchain go1.25.1
+toolchain go1.25.2
 
 require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/PuerkitoBio/goquery v1.10.3
+	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
 	modernc.org/sqlite v1.39.0
@@ -16,7 +17,6 @@ require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/bcicen/bfstree v1.0.0 // indirect
-	github.com/bcicen/go-units v1.0.5 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
