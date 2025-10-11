@@ -1,6 +1,6 @@
 module marmithon
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.25.2
 
@@ -10,7 +10,7 @@ require (
 	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
-	modernc.org/sqlite v1.39.0
+	modernc.org/sqlite v1.39.1
 )
 
 require (
@@ -28,10 +28,10 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	gopkg.in/sorcix/irc.v2 v2.0.0-20200812151606-3f15758ea8c7 // indirect
-	modernc.org/libc v1.66.3 // indirect
+	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
