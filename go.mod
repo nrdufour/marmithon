@@ -10,7 +10,7 @@ require (
 	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
-	modernc.org/sqlite v1.39.1
+	modernc.org/sqlite v1.40.0
 )
 
 require (
