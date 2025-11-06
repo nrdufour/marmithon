@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.25.4-alpine3.21 as build
+FROM docker.io/library/golang:1.25.4-alpine3.21 AS build
 
 ARG TARGETOS=linux
 ARG TARGETARCH=arm64
@@ -16,17 +16,15 @@ RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
 # -----------------------------------------------------------------------------
 FROM docker.io/library/alpine:3.21
 
-# Install required packages for Tailscale
+# Install required packages including Tailscale
 RUN apk update && apk add --no-cache \
     ca-certificates \
     iptables \
     ip6tables \
     iproute2 \
     curl \
-    su-exec
-
-# Install Tailscale
-RUN curl -fsSL https://tailscale.com/install.sh | sh
+    su-exec \
+    tailscale
 
 # Create a non-root user
 RUN addgroup -g 65532 -S nonroot && \
