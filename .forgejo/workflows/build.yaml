@@ -41,3 +41,16 @@ jobs:
           build-args: |
             TARGETARCH=arm64
             TARGETOS=linux
+      - name: Build and push Tailscale variant
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.ts
+          platforms: linux/arm64
+          push: true
+          tags: |
+            forge.internal/nemo/marmitton-ts:latest
+            forge.internal/nemo/marmitton-ts:${{ env.BUILD_TAG }}
+          build-args: |
+            TARGETARCH=arm64
+            TARGETOS=linux
