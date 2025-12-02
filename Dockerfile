@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.25.4-alpine3.21 as build
+FROM docker.io/library/golang:1.25.5-alpine3.21 as build
 
 ARG TARGETOS=linux
 ARG TARGETARCH=arm64
