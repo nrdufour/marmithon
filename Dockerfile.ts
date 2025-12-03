@@ -14,7 +14,7 @@ RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w -X 'marmithon/command.GitCommit=${COMMIT}' -X 'marmithon/command.BuildTime=${BUILD_TIME}'"
 
 # -----------------------------------------------------------------------------
-FROM docker.io/library/alpine:3.22
+FROM docker.io/library/alpine:3.23
 
 # Install required packages including Tailscale
 RUN apk update && apk add --no-cache \
