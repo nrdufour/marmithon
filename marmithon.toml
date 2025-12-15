@@ -2,3 +2,17 @@ server = "irc.ircnet.com:6667"
 nick = "Marmithon"
 ssl = false
 channels = ["#souk", "#debian-fr"]
+
+# Identd server configuration (RFC 1413)
+identdEnabled = true
+identdPort = "113"
+identdUsername = "marmithon"
+
+# Prometheus metrics server
+metricsEnabled = true
+metricsPort = "9090"
+
+# Automatic reconnection
+reconnectEnabled = true
+reconnectDelaySeconds = 30
+reconnectMaxAttempts = 0  # 0 = unlimited

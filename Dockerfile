@@ -31,6 +31,9 @@ RUN addgroup -g 65532 nonroot && \
 COPY --from=build /marmithon/marmithon /app/marmithon
 COPY --from=build /marmithon/marmithon.toml /app
 
+# Expose identd port (113) and metrics port (9090)
+EXPOSE 113 9090
+
 USER nonroot:nonroot
 ENTRYPOINT ["/app/marmithon"]
 CMD ["-config", "/app/marmithon.toml"]

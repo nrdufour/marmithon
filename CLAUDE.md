@@ -4,21 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Marmithon is a simple IRC bot written in Go that connects to IRC networks and provides various utility commands. It's built using the hellabot IRC library and includes features like URL title extraction, CVE lookups, unit conversions, airport information, and user activity tracking.
+Marmithon is a simple IRC bot written in Go that connects to IRC networks and provides various utility commands. It's built using the hellabot IRC library and includes features like URL title extraction, CVE lookups, unit conversions, airport information, user activity tracking, native identd server, Prometheus metrics, and automatic reconnection.
 
 ## Architecture
 
 The codebase follows a modular structure:
 
-- **main.go**: Entry point that initializes the bot, loads configuration, sets up commands, and starts the IRC connection
+- **main.go**: Entry point that initializes the bot, loads configuration, sets up commands, starts services (identd, metrics), and manages IRC connection with reconnection logic
 - **config/**: Configuration management using TOML files
 - **command/**: Command system with individual handlers for different bot features
-  - **command.go**: Core command framework with trigger processing and URL detection
+  - **command.go**: Core command framework with trigger processing, URL detection, and metrics tracking
   - **various.go**: Utility commands (version, CVE lookup, unit conversion)
   - **atc.go**: Aviation-related commands (airport search, distance calculation)
   - **seen.go**: User activity tracking with SQLite database
   - **title.go**: URL title extraction functionality
   - **units.go**: Unit conversion system
+- **identd/**: RFC 1413 compliant identd server for IRC authentication
+- **metrics/**: Prometheus metrics collection and HTTP server
 
 ## Key Components
 
@@ -26,10 +28,30 @@ The codebase follows a modular structure:
 Commands are registered in `setupCommands()` in main.go and processed through the `CommandTrigger` that listens for PRIVMSG events. Each command implements the `command.Func` signature and receives the IRC message and parsed arguments.
 
 ### Configuration
-Uses TOML configuration files (default: `production.toml`, dev: `dev.toml`) with settings for server, nickname, channels, SSL, and API URLs. The bot validates configuration on startup.
+Uses TOML configuration files (default: `marmithon.toml`, dev: `dev.toml`) with settings for:
+- IRC connection (server, nickname, channels, SSL, password)
+- Identd server (enabled, port, username)
+- Metrics server (enabled, port)
+- Reconnection behavior (enabled, delay, max attempts)
+- API URLs for external services
+
+The bot validates configuration on startup and provides sensible defaults for optional settings.
 
 ### Database
 Uses SQLite for the "seen" functionality to track when users were last active in channels. Database is initialized at startup and stored in `/data/seen.db`.
+
+### Identd Server
+Native RFC 1413 identd server implementation that responds to identification requests from IRC servers. Runs on port 113 (configurable) and returns the configured username.
+
+### Metrics & Monitoring
+Prometheus-compatible metrics server exposing:
+- Uptime, connection status, message counters
+- Command execution counts, reconnection attempts
+- Channel counts
+- Health check endpoint at `/health`
+
+### Automatic Reconnection
+When enabled, the bot automatically reconnects to IRC if the connection is lost. Configurable delay between attempts and optional maximum attempt limit.
 
 ### External APIs
 Integrates with external services:
@@ -54,7 +76,7 @@ No specific test commands found in the project. Use standard Go testing:
 - **Fly.io deployment**: Uses `fly.toml` configuration for deployment to Fly.io platform
 
 ### Docker
-The project uses multi-stage Docker builds with distroless base images for security. See `Dockerfile` for build process.
+The project uses multi-stage Docker builds with Alpine base images. The Dockerfile exposes ports 113 (identd) and 9090 (metrics). See `Dockerfile` for build process.
 
 ## Configuration Files
 

@@ -3,10 +3,10 @@ package command
 import (
 	"bytes"
 	"fmt"
+	"marmithon/config"
+	"marmithon/metrics"
 	"regexp"
 	"strings"
-
-	"marmithon/config"
 
 	hbot "github.com/whyrusleeping/hellabot"
 )
@@ -89,6 +89,9 @@ func (cl *List) handleCommand(bot *hbot.Bot, m *hbot.Message) {
 			args = parts[1:]
 		}
 		cmd.Run(m, args)
+		if met := metrics.Get(); met != nil {
+			met.IncCommandsExecuted()
+		}
 	}(m)
 }
 

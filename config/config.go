@@ -28,7 +28,28 @@ func FromFile(configFile string) (Config, error) {
 	if config.AirportAPIURL == "" {
 		config.AirportAPIURL = "https://ask.fly.dev"
 	}
-	
+
+	// Set default identd settings
+	if config.IdentdEnabled && config.IdentdPort == "" {
+		config.IdentdPort = "113"
+	}
+	if config.IdentdEnabled && config.IdentdUsername == "" {
+		config.IdentdUsername = config.Nick
+	}
+
+	// Set default metrics settings
+	if config.MetricsEnabled && config.MetricsPort == "" {
+		config.MetricsPort = "9090"
+	}
+
+	// Set default reconnection settings
+	if config.ReconnectEnabled && config.ReconnectDelaySeconds == 0 {
+		config.ReconnectDelaySeconds = 30
+	}
+	if config.ReconnectEnabled && config.ReconnectMaxAttempts == 0 {
+		config.ReconnectMaxAttempts = 0 // 0 means infinite
+	}
+
 	return config, nil
 }
 
@@ -40,6 +61,20 @@ type Config struct {
 	Channels       []string
 	SSL            bool
 	AirportAPIURL  string
+
+	// Identd configuration
+	IdentdEnabled  bool
+	IdentdPort     string
+	IdentdUsername string
+
+	// Metrics configuration
+	MetricsEnabled bool
+	MetricsPort    string
+
+	// Reconnection configuration
+	ReconnectEnabled      bool
+	ReconnectDelaySeconds int
+	ReconnectMaxAttempts  int
 }
 
 // ValidateConfig checks that the config object has all the values it should.
