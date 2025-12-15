@@ -15,7 +15,14 @@ RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
 
 # -----------------------------------------------------------------------------
 FROM alpine:3.21
-RUN apk add --no-cache wget ca-certificates
+# Install useful utilities for debugging and management
+RUN apk add --no-cache \
+    wget \
+    curl \
+    ca-certificates \
+    bind-tools \
+    busybox-extras \
+    netcat-openbsd
 
 # Create nonroot user
 RUN addgroup -g 65532 nonroot && \
@@ -23,9 +30,7 @@ RUN addgroup -g 65532 nonroot && \
 
 COPY --from=build /marmithon/marmithon /app/marmithon
 COPY --from=build /marmithon/marmithon.toml /app
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 USER nonroot:nonroot
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/marmithon"]
 CMD ["-config", "/app/marmithon.toml"]
