@@ -14,10 +14,18 @@ RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w -X 'marmithon/command.GitCommit=${COMMIT}' -X 'marmithon/command.BuildTime=${BUILD_TIME}'"
 
 # -----------------------------------------------------------------------------
-FROM gcr.io/distroless/static:nonroot
-USER nonroot:nonroot
+FROM alpine:3.21
+RUN apk add --no-cache wget ca-certificates
+
+# Create nonroot user
+RUN addgroup -g 65532 nonroot && \
+    adduser -D -u 65532 -G nonroot nonroot
 
 COPY --from=build /marmithon/marmithon /app/marmithon
 COPY --from=build /marmithon/marmithon.toml /app
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-CMD ["/app/marmithon", "-config", "/app/marmithon.toml"]
+USER nonroot:nonroot
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["-config", "/app/marmithon.toml"]

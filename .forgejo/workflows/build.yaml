@@ -20,14 +20,14 @@ jobs:
         shell: bash
         run: |
           echo "BUILD_TAG=main-${GITHUB_SHA:0:7}-$(date +%s)" >> $GITHUB_ENV
-
+          
       - name: Login to registry
         uses: docker/login-action@v3
         with:
           registry: forge.internal
           username: ${{ secrets.GIT_USERNAME}}
           password: ${{ secrets.GIT_PASSWORD }}
-
+          
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -37,20 +37,6 @@ jobs:
           tags: |
             forge.internal/nemo/marmitton:latest
             forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}
-          build-args: |
-            TARGETARCH=arm64
-            TARGETOS=linux
-            
-      - name: Build and push Tailscale variant
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.ts
-          platforms: linux/arm64
-          push: true
-          tags: |
-            forge.internal/nemo/marmitton-ts:latest
-            forge.internal/nemo/marmitton-ts:${{ env.BUILD_TAG }}
           build-args: |
             TARGETARCH=arm64
             TARGETOS=linux
