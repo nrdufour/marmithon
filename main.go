@@ -120,6 +120,8 @@ func run() error {
 		return fmt.Errorf("erreur lors de l'initialisation de la base seen: %w", err)
 	}
 
+	// Initialize core with config (bot will be set later)
+	core = &command.Core{Config: &conf}
 	setupCommands()
 
 	// Setup signal handling for graceful shutdown
@@ -166,7 +168,8 @@ func createAndStartBot(conf config.Config, met *metrics.Metrics) (*hbot.Bot, err
 		return nil, err
 	}
 
-	core = &command.Core{Bot: bot, Config: &conf}
+	// Update the bot reference in the existing core
+	core.Bot = bot
 	bot.AddTrigger(CommandTrigger)
 	if met != nil {
 		bot.AddTrigger(MetricsTrigger)
