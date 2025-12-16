@@ -25,9 +25,9 @@ type DistanceResponse struct {
 	Distance float64 `json:"distance_nm"`
 }
 
-func (core Core) SearchForOACI(m *hbot.Message, args []string) {
+func (core Core) SearchForOACI(bot *hbot.Bot, m *hbot.Message, args []string) {
 	if len(args) == 0 {
-		core.Bot.Reply(m, "Dites moi au moins qqchose sur cet aéroport")
+		bot.Reply(m, "Dites moi au moins qqchose sur cet aéroport")
 		return
 	}
 
@@ -39,12 +39,12 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 
 	airports, err := core.searchAirports(searchingFor, countryLimiter, 10)
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("Désolé, erreur lors de la recherche: %s", err.Error()))
+		bot.Reply(m, fmt.Sprintf("Désolé, erreur lors de la recherche: %s", err.Error()))
 		return
 	}
 
 	if len(airports) == 0 {
-		core.Bot.Reply(m, "Désolé, je n'ai pas trouvé d'aéroports")
+		bot.Reply(m, "Désolé, je n'ai pas trouvé d'aéroports")
 		return
 	}
 
@@ -55,14 +55,14 @@ func (core Core) SearchForOACI(m *hbot.Message, args []string) {
 		if displayed >= limit {
 			break
 		}
-		core.Bot.Reply(m, fmt.Sprintf("%s : %s (%s)", airport.ICAO, airport.Name, airport.Country))
+		bot.Reply(m, fmt.Sprintf("%s : %s (%s)", airport.ICAO, airport.Name, airport.Country))
 		displayed++
 	}
 
 	if len(airports) > limit {
-		core.Bot.Reply(m, fmt.Sprintf("--- Total: %d (limit: %d)", len(airports), limit))
+		bot.Reply(m, fmt.Sprintf("--- Total: %d (limit: %d)", len(airports), limit))
 	} else {
-		core.Bot.Reply(m, fmt.Sprintf("--- Total: %d", len(airports)))
+		bot.Reply(m, fmt.Sprintf("--- Total: %d", len(airports)))
 	}
 }
 
@@ -110,9 +110,9 @@ func (core Core) searchAirports(searchTerm, countryLimiter string, maxResults in
 	return validAirports, nil
 }
 
-func (core Core) CalculateDistance(m *hbot.Message, args []string) {
+func (core Core) CalculateDistance(bot *hbot.Bot, m *hbot.Message, args []string) {
 	if len(args) != 2 {
-		core.Bot.Reply(m, "Usage: !distance <departure_ICAO> <destination_ICAO>")
+		bot.Reply(m, "Usage: !distance <departure_ICAO> <destination_ICAO>")
 		return
 	}
 
@@ -120,17 +120,17 @@ func (core Core) CalculateDistance(m *hbot.Message, args []string) {
 	destination := strings.ToUpper(args[1])
 
 	if len(departure) != 4 || len(destination) != 4 {
-		core.Bot.Reply(m, "Les codes ICAO doivent contenir exactement 4 caractères")
+		bot.Reply(m, "Les codes ICAO doivent contenir exactement 4 caractères")
 		return
 	}
 
 	distance, err := core.getDistance(departure, destination)
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("Erreur lors du calcul de la distance: %s", err.Error()))
+		bot.Reply(m, fmt.Sprintf("Erreur lors du calcul de la distance: %s", err.Error()))
 		return
 	}
 
-	core.Bot.Reply(m, fmt.Sprintf("Distance entre %s et %s: %.0f milles nautiques", departure, destination, distance))
+	bot.Reply(m, fmt.Sprintf("Distance entre %s et %s: %.0f milles nautiques", departure, destination, distance))
 }
 
 func (core Core) getDistance(departure, destination string) (float64, error) {

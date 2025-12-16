@@ -26,7 +26,7 @@ type Command struct {
 }
 
 // Func represents the Go function that will be executed when a command triggers
-type Func func(m *hbot.Message, args []string)
+type Func func(bot *hbot.Bot, m *hbot.Message, args []string)
 
 // List holds the command list and prefix
 type List struct {
@@ -81,18 +81,18 @@ func (cl *List) handleCommand(bot *hbot.Bot, m *hbot.Message) {
 		"args", parts,
 		"full text", m.Content)
 
-	go func(m *hbot.Message) {
+	go func(bot *hbot.Bot, m *hbot.Message) {
 		bot.Logger.Debug("action", "executing",
 			"full text", m.Content)
 		var args []string
 		if len(parts) > 1 {
 			args = parts[1:]
 		}
-		cmd.Run(m, args)
+		cmd.Run(bot, m, args)
 		if met := metrics.Get(); met != nil {
 			met.IncCommandsExecuted()
 		}
-	}(m)
+	}(bot, m)
 }
 
 func (cl *List) handleHelpCommand(bot *hbot.Bot, m *hbot.Message, parts []string) {

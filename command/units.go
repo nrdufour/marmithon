@@ -21,35 +21,35 @@ var customConversions = map[string]float64{
 	"nmi_to_m":  1852.0,         // 1 nautical mile = 1852 meters
 }
 
-func (core Core) ShowKnownUnits(m *hbot.Message) {
-	core.Bot.Reply(m, "🔧 Unités disponibles (exemples):")
-	core.Bot.Reply(m, "📏 Distance: m, km, ft, mi, in, cm, mm, nmi")
-	core.Bot.Reply(m, "⚖️  Poids: kg, g, lb, oz, ton")
-	core.Bot.Reply(m, "🌡️  Température: C, F, K")
-	core.Bot.Reply(m, "📦 Volume: l, ml, gal, qt, pt")
-	core.Bot.Reply(m, "💾 Données: B, KB, MB, GB, TB")
-	core.Bot.Reply(m, "⚡ Énergie: J, kJ, cal, kcal, Wh, kWh")
-	core.Bot.Reply(m, "💡 Usage: !convert <valeur> <unité_source> <unité_cible>")
-	core.Bot.Reply(m, "🔍 Recherche: !convert search <terme> pour trouver des unités")
+func (core Core) ShowKnownUnits(bot *hbot.Bot, m *hbot.Message) {
+	bot.Reply(m, "🔧 Unités disponibles (exemples):")
+	bot.Reply(m, "📏 Distance: m, km, ft, mi, in, cm, mm, nmi")
+	bot.Reply(m, "⚖️  Poids: kg, g, lb, oz, ton")
+	bot.Reply(m, "🌡️  Température: C, F, K")
+	bot.Reply(m, "📦 Volume: l, ml, gal, qt, pt")
+	bot.Reply(m, "💾 Données: B, KB, MB, GB, TB")
+	bot.Reply(m, "⚡ Énergie: J, kJ, cal, kcal, Wh, kWh")
+	bot.Reply(m, "💡 Usage: !convert <valeur> <unité_source> <unité_cible>")
+	bot.Reply(m, "🔍 Recherche: !convert search <terme> pour trouver des unités")
 }
 
-func (core Core) ConvertUnits(m *hbot.Message, args []string) {
+func (core Core) ConvertUnits(bot *hbot.Bot, m *hbot.Message, args []string) {
 	// Handle search functionality
 	if len(args) >= 2 && strings.ToLower(args[0]) == "search" {
-		core.SearchUnits(m, strings.Join(args[1:], " "))
+		core.SearchUnits(bot, m, strings.Join(args[1:], " "))
 		return
 	}
 
 	// Show help if wrong number of arguments
 	if len(args) != 3 {
-		core.ShowKnownUnits(m)
+		core.ShowKnownUnits(bot, m)
 		return
 	}
 
 	// Parse the input value
 	value, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
-		core.Bot.Reply(m, "❌ Valeur invalide. Utilisez un nombre (ex: 25.5)")
+		bot.Reply(m, "❌ Valeur invalide. Utilisez un nombre (ex: 25.5)")
 		return
 	}
 
@@ -59,22 +59,22 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	// Try custom conversion first (for nautical miles, etc.)
 	if result, ok := core.tryCustomConversion(value, unitFrom, unitTo); ok {
 		precision := determinePrecision(result)
-		core.Bot.Reply(m, fmt.Sprintf("✅ %.2f %s = %.*f %s", value, unitFrom, precision, result, unitTo))
+		bot.Reply(m, fmt.Sprintf("✅ %.2f %s = %.*f %s", value, unitFrom, precision, result, unitTo))
 		return
 	}
 
 	// Find the units in the standard library
 	fromUnit, err := u.Find(unitFrom)
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("❌ Unité source inconnue: '%s'", unitFrom))
-		core.suggestSimilarUnits(m, unitFrom)
+		bot.Reply(m, fmt.Sprintf("❌ Unité source inconnue: '%s'", unitFrom))
+		core.suggestSimilarUnits(bot, m, unitFrom)
 		return
 	}
 
 	toUnit, err := u.Find(unitTo)
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("❌ Unité cible inconnue: '%s'", unitTo))
-		core.suggestSimilarUnits(m, unitTo)
+		bot.Reply(m, fmt.Sprintf("❌ Unité cible inconnue: '%s'", unitTo))
+		core.suggestSimilarUnits(bot, m, unitTo)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	resultValue, err := u.ConvertFloat(value, fromUnit, toUnit)
 	if err != nil {
 		// Try to provide helpful error messages
-		core.handleConversionError(m, err, unitFrom, unitTo)
+		core.handleConversionError(bot, m, err, unitFrom, unitTo)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (core Core) ConvertUnits(m *hbot.Message, args []string) {
 	result := resultValue.Float()
 	// Format the result with appropriate precision
 	precision := determinePrecision(result)
-	core.Bot.Reply(m, fmt.Sprintf("✅ %.2f %s = %.*f %s", value, unitFrom, precision, result, unitTo))
+	bot.Reply(m, fmt.Sprintf("✅ %.2f %s = %.*f %s", value, unitFrom, precision, result, unitTo))
 }
 
 // tryCustomConversion handles conversions for custom units like nautical miles
@@ -144,7 +144,7 @@ func (core Core) tryCustomConversion(value float64, unitFrom, unitTo string) (fl
 }
 
 // SearchUnits helps users find available units
-func (core Core) SearchUnits(m *hbot.Message, searchTerm string) {
+func (core Core) SearchUnits(bot *hbot.Bot, m *hbot.Message, searchTerm string) {
 	searchTerm = strings.ToLower(searchTerm)
 	allUnits := u.All()
 	var matches []u.Unit
@@ -167,8 +167,8 @@ func (core Core) SearchUnits(m *hbot.Message, searchTerm string) {
 	}
 
 	if len(matches) == 0 && len(customMatches) == 0 {
-		core.Bot.Reply(m, fmt.Sprintf("❌ Aucune unité trouvée pour '%s'", searchTerm))
-		core.Bot.Reply(m, "💡 Essayez: meter, gram, celsius, liter, joule, byte, nmi")
+		bot.Reply(m, fmt.Sprintf("❌ Aucune unité trouvée pour '%s'", searchTerm))
+		bot.Reply(m, "💡 Essayez: meter, gram, celsius, liter, joule, byte, nmi")
 		return
 	}
 
@@ -176,29 +176,29 @@ func (core Core) SearchUnits(m *hbot.Message, searchTerm string) {
 		matches = matches[:10]
 	}
 
-	core.Bot.Reply(m, fmt.Sprintf("🔍 Unités trouvées pour '%s':", searchTerm))
+	bot.Reply(m, fmt.Sprintf("🔍 Unités trouvées pour '%s':", searchTerm))
 	for _, unit := range matches {
-		core.Bot.Reply(m, fmt.Sprintf("  • %s (%s)", unit.Name, unit.Symbol))
+		bot.Reply(m, fmt.Sprintf("  • %s (%s)", unit.Name, unit.Symbol))
 	}
 	for _, customUnit := range customMatches {
-		core.Bot.Reply(m, fmt.Sprintf("  • nautical mile (%s) - distance", customUnit))
+		bot.Reply(m, fmt.Sprintf("  • nautical mile (%s) - distance", customUnit))
 	}
 }
 
 // handleConversionError provides helpful error messages
-func (core Core) handleConversionError(m *hbot.Message, err error, unitFrom, unitTo string) {
+func (core Core) handleConversionError(bot *hbot.Bot, m *hbot.Message, err error, unitFrom, unitTo string) {
 	errMsg := err.Error()
 
 	if strings.Contains(errMsg, "no conversion") || strings.Contains(errMsg, "incompatible") {
-		core.Bot.Reply(m, fmt.Sprintf("❌ Impossible de convertir %s vers %s (types incompatibles)", unitFrom, unitTo))
-		core.Bot.Reply(m, "💡 Vérifiez que vous convertissez entre le même type d'unité (ex: longueur vers longueur)")
+		bot.Reply(m, fmt.Sprintf("❌ Impossible de convertir %s vers %s (types incompatibles)", unitFrom, unitTo))
+		bot.Reply(m, "💡 Vérifiez que vous convertissez entre le même type d'unité (ex: longueur vers longueur)")
 	} else {
-		core.Bot.Reply(m, fmt.Sprintf("❌ Erreur de conversion: %s", errMsg))
+		bot.Reply(m, fmt.Sprintf("❌ Erreur de conversion: %s", errMsg))
 	}
 }
 
 // suggestSimilarUnits tries to find similar units to help the user
-func (core Core) suggestSimilarUnits(m *hbot.Message, unitName string) {
+func (core Core) suggestSimilarUnits(bot *hbot.Bot, m *hbot.Message, unitName string) {
 	allUnits := u.All()
 	var suggestions []u.Unit
 
@@ -218,9 +218,9 @@ func (core Core) suggestSimilarUnits(m *hbot.Message, unitName string) {
 	}
 
 	if len(suggestions) > 0 {
-		core.Bot.Reply(m, "💡 Unités similaires:")
+		bot.Reply(m, "💡 Unités similaires:")
 		for _, unit := range suggestions {
-			core.Bot.Reply(m, fmt.Sprintf("  • %s (%s)", unit.Name, unit.Symbol))
+			bot.Reply(m, fmt.Sprintf("  • %s (%s)", unit.Name, unit.Symbol))
 		}
 	}
 }

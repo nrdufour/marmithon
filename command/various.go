@@ -57,32 +57,32 @@ type cveResponse struct {
 }
 
 // GetCVE gets info about a CVE
-func (core Core) GetCVE(m *hbot.Message, args []string) {
+func (core Core) GetCVE(bot *hbot.Bot, m *hbot.Message, args []string) {
 	if len(args) < 1 {
-		core.Bot.Reply(m, "Veuillez me donner la CVE à retrouver")
+		bot.Reply(m, "Veuillez me donner la CVE à retrouver")
 		return
 	}
 
 	cve := strings.TrimSpace(strings.ToUpper(args[0]))
 	if cve == "" {
-		core.Bot.Reply(m, "La CVE ne peut pas être vide")
+		bot.Reply(m, "La CVE ne peut pas être vide")
 		return
 	}
 
 	if err := validateCVE(cve); err != nil {
-		core.Bot.Reply(m, err.Error())
+		bot.Reply(m, err.Error())
 		return
 	}
 
 	cveInfo, err := fetchCVEInfo(cve)
 	if err != nil {
-		core.Bot.Reply(m, fmt.Sprintf("Erreur lors de la récupération de la CVE: %s", err.Error()))
+		bot.Reply(m, fmt.Sprintf("Erreur lors de la récupération de la CVE: %s", err.Error()))
 		return
 	}
 
-	core.Bot.Reply(m, fmt.Sprintf("%s: %s", cve, cveInfo.Data.Summary))
+	bot.Reply(m, fmt.Sprintf("%s: %s", cve, cveInfo.Data.Summary))
 	if len(cveInfo.Data.Refmap.Confirm) > 0 {
-		core.Bot.Reply(m, fmt.Sprintf("Référence: %s", cveInfo.Data.Refmap.Confirm[0]))
+		bot.Reply(m, fmt.Sprintf("Référence: %s", cveInfo.Data.Refmap.Confirm[0]))
 	}
 }
 
@@ -91,8 +91,8 @@ var (
 	BuildTime = "unknown"
 )
 
-func (core Core) ShowVersion(m *hbot.Message, args []string) {
-	core.Bot.Reply(m, fmt.Sprintf("Version: %s -- Build: %s", GitCommit, BuildTime))
+func (core Core) ShowVersion(bot *hbot.Bot, m *hbot.Message, args []string) {
+	bot.Reply(m, fmt.Sprintf("Version: %s -- Build: %s", GitCommit, BuildTime))
 }
 
 func validateCVE(cve string) error {

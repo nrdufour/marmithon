@@ -228,21 +228,21 @@ func FormatTimeDifference(then time.Time) string {
 }
 
 // Seen handles the !seen command
-func (core Core) Seen(m *hbot.Message, args []string) {
+func (core Core) Seen(bot *hbot.Bot, m *hbot.Message, args []string) {
 	if len(args) < 1 {
-		core.Bot.Reply(m, "Dis-moi qui tu cherches ! Usage: !seen <pseudo> (supports wildcards like dsp*)")
+		bot.Reply(m, "Dis-moi qui tu cherches ! Usage: !seen <pseudo> (supports wildcards like dsp*)")
 		return
 	}
 
 	targetNick := strings.TrimSpace(args[0])
 	if targetNick == "" {
-		core.Bot.Reply(m, "Le pseudo ne peut pas être vide !")
+		bot.Reply(m, "Le pseudo ne peut pas être vide !")
 		return
 	}
 
 	// Check if the user is asking about themselves
 	if strings.EqualFold(targetNick, m.From) {
-		core.Bot.Reply(m, "Tu te cherches toi-même ? Regarde-toi dans un miroir !")
+		bot.Reply(m, "Tu te cherches toi-même ? Regarde-toi dans un miroir !")
 		return
 	}
 
@@ -250,12 +250,12 @@ func (core Core) Seen(m *hbot.Message, args []string) {
 	if strings.Contains(targetNick, "*") || strings.Contains(targetNick, "?") {
 		results, err := SearchUsersSeen(targetNick)
 		if err != nil {
-			core.Bot.Reply(m, "Erreur lors de la recherche, désolé !")
+			bot.Reply(m, "Erreur lors de la recherche, désolé !")
 			return
 		}
 
 		if len(results) == 0 {
-			core.Bot.Reply(m, fmt.Sprintf("Aucun utilisateur trouvé correspondant à '%s'", targetNick))
+			bot.Reply(m, fmt.Sprintf("Aucun utilisateur trouvé correspondant à '%s'", targetNick))
 			return
 		}
 
@@ -264,25 +264,25 @@ func (core Core) Seen(m *hbot.Message, args []string) {
 			result := results[0]
 			timeDiff := time.Now().Sub(result.LastSeen)
 			if timeDiff < 5*time.Minute {
-				core.Bot.Reply(m, GetRandomPresentResponse(result.Nickname))
+				bot.Reply(m, GetRandomPresentResponse(result.Nickname))
 				return
 			}
 
 			timeDiffStr := FormatTimeDifference(result.LastSeen)
-			response := fmt.Sprintf("%s a été vu.e pour la dernière fois sur %s %s", 
+			response := fmt.Sprintf("%s a été vu.e pour la dernière fois sur %s %s",
 				result.Nickname, result.Channel, timeDiffStr)
-			
+
 			if len(result.LastMessage) > 0 && len(result.LastMessage) < 100 {
 				response += fmt.Sprintf(" en disant: \"%s\"", result.LastMessage)
 			}
-			core.Bot.Reply(m, response)
+			bot.Reply(m, response)
 			return
 		}
 
 		// Multiple results, show a summary
 		var responseLines []string
 		responseLines = append(responseLines, fmt.Sprintf("Utilisateurs correspondant à '%s':", targetNick))
-		
+
 		for i, result := range results {
 			if i >= 5 { // Limit to first 5 results
 				responseLines = append(responseLines, fmt.Sprintf("... et %d autre(s)", len(results)-i))
@@ -291,8 +291,8 @@ func (core Core) Seen(m *hbot.Message, args []string) {
 			timeDiffStr := FormatTimeDifference(result.LastSeen)
 			responseLines = append(responseLines, fmt.Sprintf("• %s sur %s %s", result.Nickname, result.Channel, timeDiffStr))
 		}
-		
-		core.Bot.Reply(m, strings.Join(responseLines, " "))
+
+		bot.Reply(m, strings.Join(responseLines, " "))
 		return
 	}
 
@@ -300,9 +300,9 @@ func (core Core) Seen(m *hbot.Message, args []string) {
 	lastSeen, channel, lastMessage, err := GetUserSeen(targetNick)
 	if err != nil {
 		if strings.Contains(err.Error(), "jamais vu") {
-			core.Bot.Reply(m, GetRandomNotSeenResponse(targetNick))
+			bot.Reply(m, GetRandomNotSeenResponse(targetNick))
 		} else {
-			core.Bot.Reply(m, "Erreur lors de la recherche, désolé !")
+			bot.Reply(m, "Erreur lors de la recherche, désolé !")
 		}
 		return
 	}
@@ -310,19 +310,19 @@ func (core Core) Seen(m *hbot.Message, args []string) {
 	// Check if the user spoke recently (within 5 minutes = very likely still present)
 	timeDiff := time.Now().Sub(lastSeen)
 	if timeDiff < 5*time.Minute {
-		core.Bot.Reply(m, GetRandomPresentResponse(targetNick))
+		bot.Reply(m, GetRandomPresentResponse(targetNick))
 		return
 	}
 
 	// Format the response with time and location
 	timeDiffStr := FormatTimeDifference(lastSeen)
-	response := fmt.Sprintf("%s a été vu.e pour la dernière fois sur %s %s", 
+	response := fmt.Sprintf("%s a été vu.e pour la dernière fois sur %s %s",
 		targetNick, channel, timeDiffStr)
-	
+
 	// Add a snippet of their last message if it's not too long
 	if len(lastMessage) > 0 && len(lastMessage) < 100 {
 		response += fmt.Sprintf(" en disant: \"%s\"", lastMessage)
 	}
 
-	core.Bot.Reply(m, response)
+	bot.Reply(m, response)
 }
