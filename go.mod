@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.25.5
 
 require (
-	github.com/BurntSushi/toml v1.5.0
+	github.com/BurntSushi/toml v1.6.0
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
