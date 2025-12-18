@@ -228,7 +228,9 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		// Wait for either bot exit or shutdown signal
 		select {
 		case <-botDone:
-			log.Println("Connexion perdue, tentative de reconnexion...")
+			log.Println("Connexion perdue, nettoyage et tentative de reconnexion...")
+			// Close the bot to clean up resources (Unix socket, etc.)
+			bot.Close()
 			continue
 		case <-sigChan:
 			log.Println("Signal d'arrêt reçu, fermeture...")
