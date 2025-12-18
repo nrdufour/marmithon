@@ -5,7 +5,7 @@ channels = ["#chezmoi"]
 
 # Identd server configuration (RFC 1413)
 identdEnabled = true
-identdPort = "113"
+identdPort = "9113"
 identdUsername = "marmithontest"
 
 # Prometheus metrics server
