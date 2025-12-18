@@ -21,6 +21,28 @@ func InitSeenDB(dbPath string) error {
 		return fmt.Errorf("erreur lors de l'ouverture de la base de données: %w", err)
 	}
 
+	// Enable WAL mode for better concurrent access
+	// WAL (Write-Ahead Logging) allows concurrent readers and writers
+	if _, err := seenDB.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		return fmt.Errorf("erreur lors de l'activation du mode WAL: %w", err)
+	}
+
+	// Set busy timeout to handle contention (5 seconds)
+	if _, err := seenDB.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		return fmt.Errorf("erreur lors de la configuration du timeout: %w", err)
+	}
+
+	// Configure connection pool for SQLite
+	// WAL mode allows concurrent access with reasonable connection limits
+	seenDB.SetMaxOpenConns(10)
+	seenDB.SetMaxIdleConns(5)
+	seenDB.SetConnMaxLifetime(0) // Connections never expire
+
+	// Verify database connection
+	if err := seenDB.Ping(); err != nil {
+		return fmt.Errorf("erreur lors de la connexion à la base de données: %w", err)
+	}
+
 	// Create the table if it doesn't exist
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS user_seen (
@@ -35,6 +57,14 @@ func InitSeenDB(dbPath string) error {
 		return fmt.Errorf("erreur lors de la création de la table: %w", err)
 	}
 
+	return nil
+}
+
+// CloseSeenDB closes the database connection
+func CloseSeenDB() error {
+	if seenDB != nil {
+		return seenDB.Close()
+	}
 	return nil
 }
 

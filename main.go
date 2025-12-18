@@ -119,6 +119,11 @@ func run() error {
 	if err := command.InitSeenDB(dbPath); err != nil {
 		return fmt.Errorf("erreur lors de l'initialisation de la base seen: %w", err)
 	}
+	defer func() {
+		if err := command.CloseSeenDB(); err != nil {
+			log.Printf("Erreur lors de la fermeture de la base de données: %v", err)
+		}
+	}()
 
 	// Initialize core with config (bot will be set later)
 	core = &command.Core{Config: &conf}
