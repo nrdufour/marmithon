@@ -42,13 +42,11 @@ func FromFile(configFile string) (Config, error) {
 		config.MetricsPort = "9090"
 	}
 
-	// Set default reconnection settings
-	if config.ReconnectEnabled && config.ReconnectDelaySeconds == 0 {
+	// Set default reconnection settings (always enabled)
+	if config.ReconnectDelaySeconds == 0 {
 		config.ReconnectDelaySeconds = 30
 	}
-	if config.ReconnectEnabled && config.ReconnectMaxAttempts == 0 {
-		config.ReconnectMaxAttempts = 0 // 0 means infinite
-	}
+	// ReconnectMaxAttempts defaults to 0 (infinite) if not set
 
 	return config, nil
 }
@@ -71,8 +69,7 @@ type Config struct {
 	MetricsEnabled bool
 	MetricsPort    string
 
-	// Reconnection configuration
-	ReconnectEnabled      bool
+	// Reconnection configuration (always enabled)
 	ReconnectDelaySeconds int
 	ReconnectMaxAttempts  int
 }

@@ -128,22 +128,8 @@ func run() error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	// Run bot with reconnection logic
-	if conf.ReconnectEnabled {
-		return runWithReconnect(conf, sigChan, met)
-	}
-
-	// Run bot without reconnection
-	bot, err := createAndStartBot(conf, met)
-	if err != nil {
-		return err
-	}
-
-	// Wait for shutdown signal
-	<-sigChan
-	log.Println("Arrêt du bot...")
-	bot.Close()
-	return nil
+	// Run bot with reconnection logic (always enabled)
+	return runWithReconnect(conf, sigChan, met)
 }
 
 func createBot(conf config.Config) (*hbot.Bot, error) {
@@ -181,6 +167,24 @@ func createAndStartBot(conf config.Config, met *metrics.Metrics) (*hbot.Bot, err
 	}
 
 	return bot, nil
+}
+
+// shutdownBot performs a graceful shutdown of the IRC bot
+func shutdownBot(bot *hbot.Bot, channels []string) {
+	if bot == nil {
+		return
+	}
+
+	// Say goodbye to all channels
+	for _, channel := range channels {
+		bot.Msg(channel, "Ah ! Je meurs !")
+	}
+	time.Sleep(500 * time.Millisecond) // Let the message send
+
+	// Send QUIT before closing to properly disconnect from IRC
+	bot.Send("QUIT :Bot shutting down")
+	time.Sleep(500 * time.Millisecond) // Give server time to process QUIT
+	bot.Close()
 }
 
 func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.Metrics) error {
@@ -228,7 +232,7 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 			continue
 		case <-sigChan:
 			log.Println("Signal d'arrêt reçu, fermeture...")
-			bot.Close()
+			shutdownBot(bot, conf.Channels)
 			// Wait a bit for clean shutdown
 			select {
 			case <-botDone:

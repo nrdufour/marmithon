@@ -12,7 +12,6 @@ identdUsername = "marmithontest"
 metricsEnabled = true
 metricsPort = "9090"
 
-# Automatic reconnection
-reconnectEnabled = true
+# Automatic reconnection (always enabled)
 reconnectDelaySeconds = 10
 reconnectMaxAttempts = 5
