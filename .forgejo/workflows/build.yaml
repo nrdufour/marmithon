@@ -27,16 +27,23 @@ jobs:
           registry: forge.internal
           username: ${{ secrets.GIT_USERNAME}}
           password: ${{ secrets.GIT_PASSWORD }}
-          
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --allow-insecure-entitlement security.insecure
+          config-inline: |
+            [registry."forge.internal"]
+              http = false
+              insecure = true
+
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             forge.internal/nemo/marmitton:latest
             forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}
-          build-args: |
-            TARGETARCH=arm64
-            TARGETOS=linux
