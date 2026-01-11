@@ -28,12 +28,31 @@ jobs:
           username: ${{ secrets.GIT_USERNAME}}
           password: ${{ secrets.GIT_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push amd64
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: |
-            forge.internal/nemo/marmitton:latest
-            forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}
+            forge.internal/nemo/marmitton:latest-amd64
+            forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}-amd64
+
+      - name: Build and push arm64
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: |
+            forge.internal/nemo/marmitton:latest-arm64
+            forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}-arm64
+
+      - name: Create and push manifest
+        run: |
+          docker buildx imagetools create -t forge.internal/nemo/marmitton:latest \
+            forge.internal/nemo/marmitton:latest-amd64 \
+            forge.internal/nemo/marmitton:latest-arm64
+          docker buildx imagetools create -t forge.internal/nemo/marmitton:${{ env.BUILD_TAG }} \
+            forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}-amd64 \
+            forge.internal/nemo/marmitton:${{ env.BUILD_TAG }}-arm64
