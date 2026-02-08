@@ -14,7 +14,7 @@ RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w -X 'marmithon/command.GitCommit=${COMMIT}' -X 'marmithon/command.BuildTime=${BUILD_TIME}'"
 
 # -----------------------------------------------------------------------------
-FROM alpine:3.21
+FROM alpine:3.23
 # Install useful utilities for debugging and management
 RUN apk add --no-cache \
     wget \
