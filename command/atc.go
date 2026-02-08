@@ -25,6 +25,14 @@ type DistanceResponse struct {
 	Distance float64 `json:"distance_nm"`
 }
 
+type TimeResponse struct {
+	ICAO      string `json:"icao"`
+	Name      string `json:"name"`
+	Timezone  string `json:"timezone"`
+	LocalTime string `json:"local_time"`
+	UTCOffset string `json:"utc_offset"`
+}
+
 func (core Core) SearchForOACI(bot *hbot.Bot, m *hbot.Message, args []string) {
 	if len(args) == 0 {
 		bot.Reply(m, "Dites moi au moins qqchose sur cet aéroport")
@@ -108,6 +116,54 @@ func (core Core) searchAirports(searchTerm, countryLimiter string, maxResults in
 	}
 
 	return validAirports, nil
+}
+
+func (core Core) GetAirportTime(bot *hbot.Bot, m *hbot.Message, args []string) {
+	if len(args) != 1 {
+		bot.Reply(m, "Usage: !time <ICAO>")
+		return
+	}
+
+	icao := strings.ToUpper(args[0])
+	if len(icao) != 4 {
+		bot.Reply(m, "Le code ICAO doit contenir exactement 4 caractères")
+		return
+	}
+
+	baseURL := fmt.Sprintf("%s/api/airport/time", core.Config.AirportAPIURL)
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		bot.Reply(m, fmt.Sprintf("URL invalide: %s", err.Error()))
+		return
+	}
+
+	q := u.Query()
+	q.Set("icao", icao)
+	u.RawQuery = q.Encode()
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		bot.Reply(m, fmt.Sprintf("Erreur lors de la requête: %s", err.Error()))
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		bot.Reply(m, fmt.Sprintf("Aéroport introuvable pour le code ICAO: %s", icao))
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		bot.Reply(m, fmt.Sprintf("Erreur: réponse HTTP %d", resp.StatusCode))
+		return
+	}
+
+	var timeResp TimeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&timeResp); err != nil {
+		bot.Reply(m, fmt.Sprintf("Erreur lors du décodage JSON: %s", err.Error()))
+		return
+	}
+
+	bot.Reply(m, fmt.Sprintf("%s (%s): %s (%s)", timeResp.ICAO, timeResp.Name, timeResp.LocalTime, timeResp.Timezone))
 }
 
 func (core Core) CalculateDistance(bot *hbot.Bot, m *hbot.Message, args []string) {

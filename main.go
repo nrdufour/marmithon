@@ -297,4 +297,11 @@ func setupCommands() {
 		Usage:       "!distance LFLL EGLL",
 		Run:         core.CalculateDistance,
 	})
+
+	cmdList.AddCommand(command.Command{
+		Name:        "time",
+		Description: "Affiche l'heure locale d'un aéroport par code ICAO",
+		Usage:       "!time LFPG",
+		Run:         core.GetAirportTime,
+	})
 }
