@@ -230,14 +230,33 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 			}
 		}()
 
+		// Send periodic IRC PINGs to keep VPN NAT mappings alive.
+		// ProtonVPN's WireGuard NAT drops idle TCP flows after ~2-3 min,
+		// which prevents the server's PINGs from reaching us.
+		pingStop := make(chan struct{})
+		go func() {
+			ticker := time.NewTicker(30 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					bot.Send("PING :keepalive")
+				case <-pingStop:
+					return
+				}
+			}
+		}()
+
 		// Wait for either bot exit or shutdown signal
 		select {
 		case <-botDone:
+			close(pingStop)
 			log.Println("Connexion perdue, nettoyage et tentative de reconnexion...")
 			// Close the bot to clean up resources (Unix socket, etc.)
 			bot.Close()
 			continue
 		case <-sigChan:
+			close(pingStop)
 			log.Println("Signal d'arrêt reçu, fermeture...")
 			shutdownBot(bot, conf.Channels)
 			// Wait a bit for clean shutdown
