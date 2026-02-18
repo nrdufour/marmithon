@@ -233,8 +233,30 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		// Send periodic IRC PINGs to keep VPN NAT mappings alive.
 		// ProtonVPN's WireGuard NAT drops idle TCP flows after ~2-3 min,
 		// which prevents the server's PINGs from reaching us.
+		// Only start after registration completes (End of MOTD) to avoid
+		// confusing the server during the registration phase.
 		pingStop := make(chan struct{})
+		pingReady := make(chan struct{})
+		bot.AddTrigger(hbot.Trigger{
+			Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
+				return m.Command == "376" // RPL_ENDOFMOTD
+			},
+			Action: func(bot *hbot.Bot, m *hbot.Message) bool {
+				select {
+				case <-pingReady:
+					// already signaled
+				default:
+					close(pingReady)
+				}
+				return false
+			},
+		})
 		go func() {
+			select {
+			case <-pingReady:
+			case <-pingStop:
+				return
+			}
 			ticker := time.NewTicker(30 * time.Second)
 			defer ticker.Stop()
 			for {
