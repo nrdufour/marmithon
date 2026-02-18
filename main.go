@@ -239,7 +239,7 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		pingReady := make(chan struct{})
 		bot.AddTrigger(hbot.Trigger{
 			Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-				return m.Command == "376" // RPL_ENDOFMOTD
+				return m.Command == "366" // RPL_ENDOFNAMES (after channel join)
 			},
 			Action: func(bot *hbot.Bot, m *hbot.Message) bool {
 				select {
