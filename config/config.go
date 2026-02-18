@@ -69,6 +69,9 @@ type Config struct {
 	MetricsEnabled bool
 	MetricsPort    string
 
+	// SOCKS5 proxy for outbound connections (e.g. "10.1.0.1:1080")
+	ProxyAddress string
+
 	// Reconnection configuration (always enabled)
 	ReconnectDelaySeconds int
 	ReconnectMaxAttempts  int

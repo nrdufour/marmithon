@@ -8,12 +8,14 @@ import (
 	"marmithon/config"
 	"marmithon/identd"
 	"marmithon/metrics"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	hbot "github.com/whyrusleeping/hellabot"
+	"golang.org/x/net/proxy"
 	log15 "gopkg.in/inconshreveable/log15.v2"
 )
 
@@ -144,6 +146,19 @@ func createBot(conf config.Config) (*hbot.Bot, error) {
 			bot.Password = conf.ServerPassword
 		}
 		bot.Channels = conf.Channels
+
+		// Route through SOCKS5 proxy if configured
+		if conf.ProxyAddress != "" {
+			dialer, err := proxy.SOCKS5("tcp", conf.ProxyAddress, nil, proxy.Direct)
+			if err != nil {
+				log.Printf("Failed to create SOCKS5 dialer: %v (falling back to direct)", err)
+				return
+			}
+			bot.Dial = func(network, addr string) (net.Conn, error) {
+				return dialer.Dial(network, addr)
+			}
+			log.Printf("Using SOCKS5 proxy at %s", conf.ProxyAddress)
+		}
 	}
 
 	bot, err := hbot.NewBot(conf.Server, conf.Nick, options)
