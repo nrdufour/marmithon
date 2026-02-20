@@ -210,6 +210,9 @@ func shutdownBot(bot *hbot.Bot, channels []string) {
 func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.Metrics) error {
 	attempts := 0
 	maxAttempts := conf.ReconnectMaxAttempts
+	baseDelay := time.Duration(conf.ReconnectDelaySeconds) * time.Second
+	maxDelay := 5 * time.Minute
+	consecutiveFailures := 0
 
 	for {
 		attempts++
@@ -222,14 +225,24 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 				met.IncReconnects()
 				met.SetConnected(false)
 			}
-			delay := time.Duration(conf.ReconnectDelaySeconds) * time.Second
-			log.Printf("Tentative de reconnexion %d dans %v...", attempts, delay)
+			// Exponential backoff: baseDelay * 2^(failures-1), capped at maxDelay
+			delay := baseDelay
+			for i := 1; i < consecutiveFailures; i++ {
+				delay *= 2
+				if delay > maxDelay {
+					delay = maxDelay
+					break
+				}
+			}
+			log.Printf("Tentative de reconnexion %d dans %v (échecs consécutifs: %d)...", attempts, delay, consecutiveFailures)
 			time.Sleep(delay)
 		}
 
+		connectTime := time.Now()
 		bot, err := createAndStartBot(conf, met)
 		if err != nil {
 			log.Printf("Erreur de création du bot: %v", err)
+			consecutiveFailures++
 			continue
 		}
 
@@ -246,8 +259,6 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		}()
 
 		// Send periodic IRC PINGs to keep VPN NAT mappings alive.
-		// ProtonVPN's WireGuard NAT drops idle TCP flows after ~2-3 min,
-		// which prevents the server's PINGs from reaching us.
 		// Only start after registration completes (End of MOTD) to avoid
 		// confusing the server during the registration phase.
 		pingStop := make(chan struct{})
@@ -288,9 +299,18 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		select {
 		case <-botDone:
 			close(pingStop)
-			log.Println("Connexion perdue, nettoyage et tentative de reconnexion...")
-			// Close the bot to clean up resources (Unix socket, etc.)
+			uptime := time.Since(connectTime)
+			log.Printf("Connexion perdue après %v, nettoyage et tentative de reconnexion...", uptime)
 			bot.Close()
+			// If the connection lasted less than 30s, it was likely rejected
+			// (e.g. "Too many host connections") — count as a failure for backoff.
+			// If it stayed up longer, the server accepted us and something else
+			// happened — reset the backoff.
+			if uptime < 30*time.Second {
+				consecutiveFailures++
+			} else {
+				consecutiveFailures = 0
+			}
 			continue
 		case <-sigChan:
 			close(pingStop)
