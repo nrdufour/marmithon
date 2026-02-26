@@ -259,14 +259,16 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		}()
 
 		// Send periodic IRC PINGs to keep VPN NAT mappings alive.
-		// Start as soon as registration completes (001 RPL_WELCOME) so the
-		// connection stays alive through the SOCKS proxy / WireGuard tunnel
-		// before channel JOIN responses arrive.
+		// Start as soon as registration completes so the connection stays
+		// alive through the SOCKS proxy / WireGuard tunnel before channel
+		// JOIN responses arrive. We use 002 (RPL_YOURHOST) because
+		// hellabot's built-in joinChannels handler consumes 001 before
+		// our trigger can see it.
 		pingStop := make(chan struct{})
 		pingReady := make(chan struct{})
 		bot.AddTrigger(hbot.Trigger{
 			Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-				return m.Command == "001" // RPL_WELCOME
+				return m.Command == "002" // RPL_YOURHOST
 			},
 			Action: func(bot *hbot.Bot, m *hbot.Message) bool {
 				select {
