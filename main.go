@@ -259,13 +259,14 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 		}()
 
 		// Send periodic IRC PINGs to keep VPN NAT mappings alive.
-		// Only start after registration completes (End of MOTD) to avoid
-		// confusing the server during the registration phase.
+		// Start as soon as registration completes (001 RPL_WELCOME) so the
+		// connection stays alive through the SOCKS proxy / WireGuard tunnel
+		// before channel JOIN responses arrive.
 		pingStop := make(chan struct{})
 		pingReady := make(chan struct{})
 		bot.AddTrigger(hbot.Trigger{
 			Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
-				return m.Command == "366" // RPL_ENDOFNAMES (after channel join)
+				return m.Command == "001" // RPL_WELCOME
 			},
 			Action: func(bot *hbot.Bot, m *hbot.Message) bool {
 				select {
