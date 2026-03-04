@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"marmithon/identd"
 	"marmithon/metrics"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -207,6 +209,44 @@ func shutdownBot(bot *hbot.Bot, channels []string) {
 	bot.Close()
 }
 
+// discoverServer queries the healthcheck API and updates conf.Server and conf.SSL.
+// Returns true if discovery succeeded, false if falling back to static config.
+func discoverServer(conf *config.Config) bool {
+	if conf.ServerDiscoveryURL == "" {
+		return false
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(conf.ServerDiscoveryURL)
+	if err != nil {
+		log.Printf("Server discovery failed (using fallback %s): %v", conf.Server, err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Server discovery returned %d (using fallback %s)", resp.StatusCode, conf.Server)
+		return false
+	}
+
+	var result struct {
+		Host  string  `json:"host"`
+		Port  int     `json:"port"`
+		SSL   bool    `json:"ssl"`
+		Score float64 `json:"score"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		log.Printf("Server discovery parse error (using fallback %s): %v", conf.Server, err)
+		return false
+	}
+
+	server := fmt.Sprintf("%s:%d", result.Host, result.Port)
+	log.Printf("Server discovery: %s (ssl=%v, score=%.1f)", server, result.SSL, result.Score)
+	conf.Server = server
+	conf.SSL = result.SSL
+	return true
+}
+
 func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.Metrics) error {
 	attempts := 0
 	maxAttempts := conf.ReconnectMaxAttempts
@@ -237,6 +277,9 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 			log.Printf("Tentative de reconnexion %d dans %v (échecs consécutifs: %d)...", attempts, delay, consecutiveFailures)
 			time.Sleep(delay)
 		}
+
+		// Try server discovery before each connection attempt
+		discoverServer(&conf)
 
 		connectTime := time.Now()
 		bot, err := createAndStartBot(conf, met)

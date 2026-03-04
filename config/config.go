@@ -72,6 +72,11 @@ type Config struct {
 	// SOCKS5 proxy for outbound connections (e.g. "10.1.0.1:1080")
 	ProxyAddress string
 
+	// Server discovery URL (e.g. "http://ircnet-healthcheck.irc.svc.cluster.local:8080/best?ssl=true")
+	// When set, queries this URL on each connect/reconnect to get the best server.
+	// Falls back to static Server config if discovery fails.
+	ServerDiscoveryURL string
+
 	// Reconnection configuration (always enabled)
 	ReconnectDelaySeconds int
 	ReconnectMaxAttempts  int
