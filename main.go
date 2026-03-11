@@ -426,4 +426,11 @@ func setupCommands() {
 		Usage:       "!time LFPG",
 		Run:         core.GetAirportTime,
 	})
+
+	cmdList.AddCommand(command.Command{
+		Name:        "helpircnet",
+		Description: "Affiche les 3 meilleurs serveurs IRCnet selon le healthcheck",
+		Usage:       "!helpircnet",
+		Run:         core.HelpIRCNet,
+	})
 }

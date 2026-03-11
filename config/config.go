@@ -77,6 +77,9 @@ type Config struct {
 	// Falls back to static Server config if discovery fails.
 	ServerDiscoveryURL string
 
+	// IRCnet healthcheck API URL (default: https://ircnet-healthcheck.fly.dev)
+	IRCNetHealthcheckURL string
+
 	// Reconnection configuration (always enabled)
 	ReconnectDelaySeconds int
 	ReconnectMaxAttempts  int
