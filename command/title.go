@@ -239,7 +239,14 @@ func fetchTitlerTitle(titlerURL, url string) (string, error) {
 		return "", fmt.Errorf("erreur d'encodage JSON: %w", err)
 	}
 
-	client := http.Client{Timeout: 30 * time.Second}
+	// Use a transport with no proxy to ensure internal cluster requests
+	// don't get routed through any configured HTTP/SOCKS proxy
+	client := http.Client{
+		Timeout: 30 * time.Second,
+		Transport: &http.Transport{
+			Proxy: nil,
+		},
+	}
 	resp, err := client.Post(titlerURL+"/api/extract", "application/json", bytes.NewReader(reqBody))
 	if err != nil {
 		return "", fmt.Errorf("erreur de requête titlerr: %w", err)
