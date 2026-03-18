@@ -30,8 +30,9 @@ type Func func(bot *hbot.Bot, m *hbot.Message, args []string)
 
 // List holds the command list and prefix
 type List struct {
-	Prefix   string
-	Commands map[string]Command
+	Prefix    string
+	Commands  map[string]Command
+	TitlerURL string
 }
 
 // AddCommand adds a command to the bots internal list
@@ -138,7 +139,7 @@ func (cl *List) handleURLDetection(bot *hbot.Bot, m *hbot.Message) {
 		if len(matches) > 0 {
 			url := matches[0]
 			go func(bot *hbot.Bot, m *hbot.Message, url string) {
-				RetrievePageTitle(bot, m, url)
+				RetrievePageTitle(bot, m, url, cl.TitlerURL)
 			}(bot, m, url)
 		}
 	}

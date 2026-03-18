@@ -1,6 +1,8 @@
 package command
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -183,7 +185,7 @@ func GetYahooTitle(r io.Reader) (string, error) {
 	return "Yahoo, c'est de la merrddeuuhhh", nil
 }
 
-func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
+func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string, titlerURL string) {
 	if url == "" {
 		bot.Reply(m, "URL invalide fournie")
 		return
@@ -195,6 +197,19 @@ func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 		return
 	}
 
+	// Try titlerr service first
+	if titlerURL != "" {
+		title, err := fetchTitlerTitle(titlerURL, url)
+		if err != nil {
+			fmt.Printf("Titlerr error for %s: %s, falling back to local extraction\n", url, err)
+		} else if title != "" {
+			cacheTitle(url, title)
+			bot.Reply(m, fmt.Sprintf("\x02%s", title))
+			return
+		}
+	}
+
+	// Fallback to local extraction
 	title, err := fetchPageTitle(url)
 	if err != nil {
 		fmt.Printf("Title extraction error for %s: %s\n", url, err)
@@ -205,6 +220,46 @@ func RetrievePageTitle(bot *hbot.Bot, m *hbot.Message, url string) {
 		cacheTitle(url, title)
 		bot.Reply(m, fmt.Sprintf("\x02%s", title))
 	}
+}
+
+type titlerRequest struct {
+	URL string `json:"url"`
+}
+
+type titlerResponse struct {
+	URL    string `json:"url"`
+	Title  string `json:"title"`
+	Method string `json:"method"`
+	Error  string `json:"error"`
+}
+
+func fetchTitlerTitle(titlerURL, url string) (string, error) {
+	reqBody, err := json.Marshal(titlerRequest{URL: url})
+	if err != nil {
+		return "", fmt.Errorf("erreur d'encodage JSON: %w", err)
+	}
+
+	client := http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Post(titlerURL+"/api/extract", "application/json", bytes.NewReader(reqBody))
+	if err != nil {
+		return "", fmt.Errorf("erreur de requête titlerr: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("titlerr a retourné le code HTTP %d", resp.StatusCode)
+	}
+
+	var result titlerResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("erreur de décodage de la réponse titlerr: %w", err)
+	}
+
+	if result.Error != "" {
+		return "", fmt.Errorf("erreur titlerr: %s", result.Error)
+	}
+
+	return result.Title, nil
 }
 
 func fetchPageTitle(url string) (string, error) {

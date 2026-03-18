@@ -374,8 +374,9 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 
 func setupCommands() {
 	cmdList = &command.List{
-		Prefix:   "!",
-		Commands: make(map[string]command.Command),
+		Prefix:    "!",
+		Commands:  make(map[string]command.Command),
+		TitlerURL: core.Config.TitlerURL,
 	}
 
 	cmdList.AddCommand(command.Command{

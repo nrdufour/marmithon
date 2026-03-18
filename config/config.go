@@ -42,6 +42,11 @@ func FromFile(configFile string) (Config, error) {
 		config.MetricsPort = "9090"
 	}
 
+	// Set default Titlerr URL
+	if config.TitlerURL == "" {
+		config.TitlerURL = "http://titlerr.irc"
+	}
+
 	// Set default reconnection settings (always enabled)
 	if config.ReconnectDelaySeconds == 0 {
 		config.ReconnectDelaySeconds = 30
@@ -79,6 +84,9 @@ type Config struct {
 
 	// IRCnet healthcheck API URL (default: https://ircnet-healthcheck.fly.dev)
 	IRCNetHealthcheckURL string
+
+	// Titlerr service URL for URL title extraction (default: http://titlerr.irc)
+	TitlerURL string
 
 	// Reconnection configuration (always enabled)
 	ReconnectDelaySeconds int
