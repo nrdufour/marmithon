@@ -12,9 +12,13 @@ build-local:
 
 build:
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-	docker buildx build --platform arm64 --tag marmithon .
+	docker buildx build \
+	  --platform arm64 \
+	  --build-arg IMAGE_REVISION=$(shell git rev-parse --short HEAD) \
+	  --build-arg IMAGE_CREATED=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) \
+	  --tag marmithon .
 
-deploy: build 
+deploy: build
 	@echo "Deploying Marmithon to Forgejo Registry..."
 	docker tag marmithon forge.internal/nemo/marmithon:test
 	docker push forge.internal/nemo/marmithon:test
