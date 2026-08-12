@@ -9,7 +9,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
-	golang.org/x/net v0.57.0
+	golang.org/x/net v0.58.0
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
 	modernc.org/sqlite v1.56.0
 )
