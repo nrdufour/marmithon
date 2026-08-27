@@ -6,7 +6,7 @@ toolchain go1.27.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
-	github.com/PuerkitoBio/goquery v1.12.0
+	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	golang.org/x/net v0.58.0
@@ -16,7 +16,7 @@ require (
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/bcicen/bfstree v1.0.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff // indirect
