@@ -61,22 +61,14 @@ Integrates with external services:
 
 ## Development Commands
 
-### Building
-- **Local build**: `make build-local` - Builds with git commit and build time info
-- **Docker build**: `make build` - Cross-platform ARM64 Docker build
-- **Direct Go build**: `go build`
+The toolchain comes from `flake.nix` (direnv loads it on `cd`). `just` alone lists recipes.
 
-### Testing
-No specific test commands found in the project. Use standard Go testing:
-- `go test ./...` - Run all tests
-- `go test ./command` - Test specific package
-
-### Deployment
-- **Deploy to registry**: `make deploy` - Tags and pushes Docker image to forge.internal registry
-- **Fly.io deployment**: Uses `fly.toml` configuration for deployment to Fly.io platform
-
-### Docker
-The project uses multi-stage Docker builds with Alpine base images. The Dockerfile exposes ports 113 (identd) and 9090 (metrics). See `Dockerfile` for build process.
+- `just check` - exactly what CI runs: gofmt check, `go vet`, staticcheck, tests, confusable-character gate
+- `just build` - binary into `bin/` with commit and build time in ldflags
+- `just run` - run from source with `dev.toml`
+- `just fmt` - gofmt + nixfmt in place
+- `just docker` / `just deploy` - local-arch image, push as `:test` to forge.internal
+- `nix build` - the packaged binary (CGO off, pure-Go sqlite)
 
 ## Configuration Files
 
@@ -87,4 +79,4 @@ The project uses multi-stage Docker builds with Alpine base images. The Dockerfi
 
 ## CI/CD
 
-Uses Forgejo Actions (`.forgejo/workflows/build.yaml`) for automated builds on main branch pushes, building ARM64 Docker images and pushing to internal registry.
+Forgejo Actions in `.forgejo/workflows/`: `ci.yaml` runs `nix develop --command just check` on every push to main and pull request, then on main builds the amd64+arm64 image on native buildkitd nodes and pushes it to forge.internal. `style.yaml` is the confusables gate on everything, including prose. Renovate autodiscovers the repo; `renovate.json5` only extends the shared preset.

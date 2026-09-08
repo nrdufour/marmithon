@@ -1,0 +1,77 @@
+name: ci
+
+# Runs on pull_request as well as push to main: gates that only run after the
+# merge are not gates. The toolchain comes from the flake, so this workflow
+# never names a version; `just check` is the single definition of what passes.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  check:
+    runs-on: native
+    env:
+      # The native runner's HOME is not writable, so every cache a tool reaches
+      # for is redirected into the workspace. XDG_CACHE_HOME covers nix's own
+      # eval cache and anything using os.UserCacheDir(); language-specific
+      # caches are added below per kind.
+      XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+      GOPATH: ${{ github.workspace }}/.gopath
+      GOCACHE: ${{ github.workspace }}/.gocache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
+      CGO_ENABLED: "0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check
+        run: nix develop --command just check
+
+      # Some tools create their caches read-only (Go's module cache does), which
+      # leaves the runner unable to delete the workspace at teardown. Hand write
+      # permission back so it can.
+      - name: Make caches removable
+        if: always()
+        shell: bash
+        run: chmod -R u+w .cache .gopath .gocache .gomodcache 2>/dev/null || true
+
+  docker:
+    runs-on: native
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build metadata
+        shell: bash
+        run: |
+          echo "BUILD_TAG=main-${GITHUB_SHA:0:7}-$(date +%s)" >> $GITHUB_ENV
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+
+      - name: Login to registry
+        uses: docker/login-action@v4
+        with:
+          registry: forge.internal
+          username: ${{ secrets.GIT_USERNAME }}
+          password: ${{ secrets.GIT_PASSWORD }}
+
+      # No QEMU and no builder setup: the runner supplies a buildx builder
+      # spanning two NATIVE buildkitd nodes (amd64 on hawk, arm64 on opi03)
+      # through BUILDX_BUILDER, so naming the platforms below is enough.
+      #
+      # See avalanche: docs/architecture/deployment/multi-arch-image-builds.md
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            IMAGE_REVISION=${{ github.sha }}
+            IMAGE_CREATED=${{ env.BUILD_TIME }}
+          tags: |
+            forge.internal/nemo/marmithon:latest
+            forge.internal/nemo/marmithon:${{ env.BUILD_TAG }}

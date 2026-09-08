@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	_ "modernc.org/sqlite"
 	hbot "github.com/whyrusleeping/hellabot"
+	_ "modernc.org/sqlite"
 )
 
 var seenDB *sql.DB
@@ -93,7 +93,7 @@ func GetUserSeen(nickname string) (time.Time, string, string, error) {
 	}
 
 	query := `SELECT channel, last_seen_at, last_message FROM user_seen WHERE nickname = ? COLLATE NOCASE`
-	
+
 	var channel, lastSeenStr, lastMessage string
 	err := seenDB.QueryRow(query, strings.ToLower(nickname)).Scan(&channel, &lastSeenStr, &lastMessage)
 	if err != nil {
@@ -111,13 +111,13 @@ func GetUserSeen(nickname string) (time.Time, string, string, error) {
 		"2006-01-02T15:04:05",
 		"2006-01-02T15:04:05Z",
 	}
-	
+
 	for _, format := range formats {
 		if lastSeen, err = time.Parse(format, lastSeenStr); err == nil {
 			break
 		}
 	}
-	
+
 	if err != nil {
 		return time.Time{}, "", "", fmt.Errorf("erreur de parsing de la date: %w", err)
 	}
@@ -126,10 +126,10 @@ func GetUserSeen(nickname string) (time.Time, string, string, error) {
 }
 
 // SearchUsersSeen retrieves users matching a wildcard pattern
-func SearchUsersSeen(pattern string) ([]struct{
-	Nickname string
-	Channel string
-	LastSeen time.Time
+func SearchUsersSeen(pattern string) ([]struct {
+	Nickname    string
+	Channel     string
+	LastSeen    time.Time
 	LastMessage string
 }, error) {
 	if seenDB == nil {
@@ -139,19 +139,19 @@ func SearchUsersSeen(pattern string) ([]struct{
 	// Convert shell-style wildcards to SQL LIKE patterns
 	sqlPattern := strings.ReplaceAll(pattern, "*", "%")
 	sqlPattern = strings.ReplaceAll(sqlPattern, "?", "_")
-	
+
 	query := `SELECT nickname, channel, last_seen_at, last_message FROM user_seen WHERE nickname LIKE ? COLLATE NOCASE ORDER BY last_seen_at DESC LIMIT 10`
-	
+
 	rows, err := seenDB.Query(query, strings.ToLower(sqlPattern))
 	if err != nil {
 		return nil, fmt.Errorf("erreur lors de la recherche: %w", err)
 	}
 	defer rows.Close()
 
-	var results []struct{
-		Nickname string
-		Channel string
-		LastSeen time.Time
+	var results []struct {
+		Nickname    string
+		Channel     string
+		LastSeen    time.Time
 		LastMessage string
 	}
 
@@ -179,10 +179,10 @@ func SearchUsersSeen(pattern string) ([]struct{
 			continue
 		}
 
-		results = append(results, struct{
-			Nickname string
-			Channel string
-			LastSeen time.Time
+		results = append(results, struct {
+			Nickname    string
+			Channel     string
+			LastSeen    time.Time
 			LastMessage string
 		}{nickname, channel, lastSeen, lastMessage})
 	}
@@ -231,21 +231,21 @@ func FormatTimeDifference(then time.Time) string {
 
 	if days > 0 {
 		if days == 1 {
-			return fmt.Sprintf("il y a 1 jour")
+			return "il y a 1 jour"
 		}
 		return fmt.Sprintf("il y a %d jours", days)
 	}
 
 	if hours > 0 {
 		if hours == 1 {
-			return fmt.Sprintf("il y a 1 heure")
+			return "il y a 1 heure"
 		}
 		return fmt.Sprintf("il y a %d heures", hours)
 	}
 
 	if minutes > 0 {
 		if minutes == 1 {
-			return fmt.Sprintf("il y a 1 minute")
+			return "il y a 1 minute"
 		}
 		return fmt.Sprintf("il y a %d minutes", minutes)
 	}
@@ -292,7 +292,7 @@ func (core Core) Seen(bot *hbot.Bot, m *hbot.Message, args []string) {
 		if len(results) == 1 {
 			// Single result, format like a normal !seen response
 			result := results[0]
-			timeDiff := time.Now().Sub(result.LastSeen)
+			timeDiff := time.Since(result.LastSeen)
 			if timeDiff < 5*time.Minute {
 				bot.Reply(m, GetRandomPresentResponse(result.Nickname))
 				return
@@ -338,7 +338,7 @@ func (core Core) Seen(bot *hbot.Bot, m *hbot.Message, args []string) {
 	}
 
 	// Check if the user spoke recently (within 5 minutes = very likely still present)
-	timeDiff := time.Now().Sub(lastSeen)
+	timeDiff := time.Since(lastSeen)
 	if timeDiff < 5*time.Minute {
 		bot.Reply(m, GetRandomPresentResponse(targetNick))
 		return

@@ -55,9 +55,10 @@ Health check available at `http://localhost:9090/health`
 
 ## Building
 
-```bash
-make build-local  # Local build
-make build        # Docker build
+just build    # Local build (bin/marmithon)
+just docker   # Docker build
+just check    # What CI runs
+nix build     # Packaged binary
 go build          # Direct Go build
 ```
 

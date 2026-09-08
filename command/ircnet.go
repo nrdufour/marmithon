@@ -11,12 +11,12 @@ import (
 )
 
 type ircnetServer struct {
-	Host          string  `json:"host"`
-	Port          int     `json:"port"`
-	SSL           bool    `json:"ssl"`
-	Score         float64 `json:"score"`
-	Up            bool    `json:"up"`
-	LatencyMs     float64 `json:"latency_ms"`
+	Host           string  `json:"host"`
+	Port           int     `json:"port"`
+	SSL            bool    `json:"ssl"`
+	Score          float64 `json:"score"`
+	Up             bool    `json:"up"`
+	LatencyMs      float64 `json:"latency_ms"`
 	ReliabilityPct float64 `json:"reliability_pct"`
 }
 
@@ -53,7 +53,7 @@ func (core Core) HelpIRCNet(bot *hbot.Bot, m *hbot.Message, args []string) {
 		if !s.Up {
 			status = "DOWN"
 		}
-		bot.Reply(m, fmt.Sprintf(" %d. %s:%d%s — score: %.1f, latence: %.0fms, fiabilité: %.0f%% (%s)",
+		bot.Reply(m, fmt.Sprintf(" %d. %s:%d%s - score: %.1f, latence: %.0fms, fiabilité: %.0f%% (%s)",
 			i+1, s.Host, s.Port, ssl, s.Score, s.LatencyMs, s.ReliabilityPct, status))
 	}
 }
