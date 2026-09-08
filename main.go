@@ -379,12 +379,15 @@ func setupCommands() {
 		TitlerURL: core.Config.TitlerURL,
 	}
 
-	cmdList.AddCommand(command.Command{
-		Name:        "cve",
-		Description: "Récupère des informations sur une CVE à partir de http://cve.circl.lu/",
-		Usage:       "!cve CVE-2017-7494",
-		Run:         core.GetCVE,
-	})
+	stats := command.Command{
+		Name:        "stats",
+		Description: "Donne le lien vers les statistiques du canal",
+		Usage:       "!stats (ou !stat)",
+		Run:         core.ShowStats,
+	}
+	cmdList.AddCommand(stats)
+	stats.Name = "stat"
+	cmdList.AddCommand(stats)
 
 	cmdList.AddCommand(command.Command{
 		Name:        "convert",
