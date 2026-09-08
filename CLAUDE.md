@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Marmithon is a simple IRC bot written in Go that connects to IRC networks and provides various utility commands. It's built using the hellabot IRC library and includes features like URL title extraction, CVE lookups, unit conversions, airport information, user activity tracking, native identd server, Prometheus metrics, and automatic reconnection.
+Marmithon is a simple IRC bot written in Go that connects to IRC networks and provides various utility commands. It's built using the hellabot IRC library and includes features like URL title extraction, unit conversions, airport information, user activity tracking, native identd server, Prometheus metrics, and automatic reconnection.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ The codebase follows a modular structure:
 - **config/**: Configuration management using TOML files
 - **command/**: Command system with individual handlers for different bot features
   - **command.go**: Core command framework with trigger processing, URL detection, and metrics tracking
-  - **various.go**: Utility commands (version, CVE lookup, unit conversion)
+  - **various.go**: Utility commands (version, stats link, unit conversion)
   - **atc.go**: Aviation-related commands (airport search, distance calculation)
   - **seen.go**: User activity tracking with SQLite database
   - **title.go**: URL title extraction functionality
@@ -55,7 +55,6 @@ When enabled, the bot automatically reconnects to IRC if the connection is lost.
 
 ### External APIs
 Integrates with external services:
-- CVE information from cve.circl.lu
 - Airport data from configurable API (default: ask.fly.dev)
 - Automatic URL title extraction for links posted in channels
 

@@ -4,7 +4,7 @@ A simple IRC bot that I maintain for friends.
 
 Features:
 + Config file based setup with TOML
-+ Command system with various utilities (CVE lookup, unit conversion, airport info)
++ Command system with various utilities (channel stats link, unit conversion, airport info)
 + Based on the great IRC package <https://github.com/whyrusleeping/hellabot>
 + Automatic URL title extraction for links posted in channels
 + User activity tracking with `!seen` command
