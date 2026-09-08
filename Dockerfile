@@ -14,10 +14,10 @@ ARG IMAGE_URL=https://forge.internal/nemo/marmithon
 ARG IMAGE_DOCUMENTATION=https://forge.internal/nemo/marmithon
 # -----------------------------------------------------------------------------
 
-FROM docker.io/library/golang:1.25.5-alpine3.21 AS build
+FROM docker.io/library/golang:1.27.1-alpine3.24 AS build
 
-ARG TARGETOS=linux
-ARG TARGETARCH=arm64
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /marmithon
 
@@ -27,7 +27,7 @@ RUN apk update && apk add --no-cache \
 COPY . .
 RUN COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") && \
     BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M:%S UTC") && \
-    GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w -X 'marmithon/command.GitCommit=${COMMIT}' -X 'marmithon/command.BuildTime=${BUILD_TIME}'"
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w -X 'marmithon/command.GitCommit=${COMMIT}' -X 'marmithon/command.BuildTime=${BUILD_TIME}'"
 
 # -----------------------------------------------------------------------------
 FROM alpine:3.24
