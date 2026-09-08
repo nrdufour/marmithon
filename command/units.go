@@ -15,10 +15,10 @@ var customUnitNames = []string{"nmi", "nautical", "nauticalmile"}
 
 // Custom conversions for units not in go-units
 var customConversions = map[string]float64{
-	"km_to_nmi": 1.0 / 1.852,    // 1 km = 1/1.852 nautical miles
-	"nmi_to_km": 1.852,          // 1 nautical mile = 1.852 km
-	"m_to_nmi":  1.0 / 1852.0,   // 1 meter = 1/1852 nautical miles
-	"nmi_to_m":  1852.0,         // 1 nautical mile = 1852 meters
+	"km_to_nmi": 1.0 / 1.852,  // 1 km = 1/1.852 nautical miles
+	"nmi_to_km": 1.852,        // 1 nautical mile = 1.852 km
+	"m_to_nmi":  1.0 / 1852.0, // 1 meter = 1/1852 nautical miles
+	"nmi_to_m":  1852.0,       // 1 nautical mile = 1852 meters
 }
 
 func (core Core) ShowKnownUnits(bot *hbot.Bot, m *hbot.Message) {

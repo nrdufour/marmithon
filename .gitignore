@@ -2,3 +2,10 @@ marmithon
 result
 .direnv
 seen.db
+/.direnv/
+result-*
+/.cache/
+/bin/
+/.gopath/
+/.gocache/
+/.gomodcache/

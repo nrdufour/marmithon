@@ -349,9 +349,9 @@ func runWithReconnect(conf config.Config, sigChan chan os.Signal, met *metrics.M
 			log.Printf("Connexion perdue après %v, nettoyage et tentative de reconnexion...", uptime)
 			bot.Close()
 			// If the connection lasted less than 30s, it was likely rejected
-			// (e.g. "Too many host connections") — count as a failure for backoff.
+			// (e.g. "Too many host connections") - count as a failure for backoff.
 			// If it stayed up longer, the server accepted us and something else
-			// happened — reset the backoff.
+			// happened - reset the backoff.
 			if uptime < 30*time.Second {
 				consecutiveFailures++
 			} else {

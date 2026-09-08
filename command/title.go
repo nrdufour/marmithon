@@ -35,7 +35,7 @@ const maxContentLength = 1024 * 1024 // 1MB limit
 
 func GetHtmlTitle(r io.Reader, contentType string) (string, error) {
 	limitedReader := io.LimitReader(r, maxContentLength)
-	
+
 	doc, err := goquery.NewDocumentFromReader(limitedReader)
 	if err != nil {
 		return "", fmt.Errorf("impossible d'analyser le HTML: %w", err)
@@ -59,9 +59,9 @@ func GetHtmlTitle(r io.Reader, contentType string) (string, error) {
 }
 
 type PlatformExtractor struct {
-	name     string
-	pattern  *regexp.Regexp
-	extract  func(io.Reader) (string, error)
+	name    string
+	pattern *regexp.Regexp
+	extract func(io.Reader) (string, error)
 }
 
 var platformExtractors = []PlatformExtractor{
@@ -318,7 +318,6 @@ func fetchPageTitle(url string) (string, error) {
 	// Fall back to generic HTML title extraction
 	return GetHtmlTitle(resp.Body, contentType)
 }
-
 
 func getCachedTitle(url string) string {
 	titleCache.mu.RLock()

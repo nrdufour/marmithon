@@ -191,7 +191,7 @@ marmithon-rs/
 #### !convert (`units.rs`)
 - Custom nautical mile conversions (same map: km↔nmi, m↔nmi)
 - Intermediate conversions through meters
-- No external units library — implement the common conversions directly:
+- No external units library - implement the common conversions directly:
   - Distance: m, km, ft, mi, in, cm, mm, nmi, yd
   - Weight: kg, g, lb, oz, ton
   - Temperature: C, F, K (non-linear)
@@ -263,7 +263,7 @@ marmithon-rs/
 
 4. **CI** (`.forgejo/workflows/build.yaml`): Adapt for Rust build
 
-5. **rusqlite bundled feature**: Embeds SQLite, no system dependency — eliminates the CGO-equivalent problem entirely
+5. **rusqlite bundled feature**: Embeds SQLite, no system dependency - eliminates the CGO-equivalent problem entirely
 
 ---
 
@@ -288,7 +288,7 @@ marmithon-rs/
    - [ ] SOCKS5 proxy support
    - [ ] Graceful shutdown with farewell messages
 4. Swap the Docker image once validated
-5. Keep the existing SQLite database — schema is identical, Rust reads it directly
+5. Keep the existing SQLite database - schema is identical, Rust reads it directly
 
 ## Estimated Size
 
