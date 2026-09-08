@@ -75,3 +75,22 @@ jobs:
           tags: |
             forge.internal/nemo/marmithon:latest
             forge.internal/nemo/marmithon:${{ env.BUILD_TAG }}
+
+      # A build node that is unreachable leaves a manifest list with a single
+      # entry, and the gap only surfaces later as an ImagePullBackOff on the
+      # other architecture. Assert both halves are there while the log can
+      # still say why one is missing.
+      - name: Verify both architectures are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          arches=$(docker buildx imagetools inspect \
+            "forge.internal/nemo/marmithon:${{ env.BUILD_TAG }}" \
+            --format '{{range .Manifest.Manifests}}{{.Platform.OS}}/{{.Platform.Architecture}} {{end}}')
+          echo "Published platforms: ${arches}"
+          for want in linux/amd64 linux/arm64; do
+            case "${arches}" in
+              *"${want}"*) echo "  ok: ${want}" ;;
+              *) echo "ERROR: ${want} missing from the manifest list" >&2; exit 1 ;;
+            esac
+          done
