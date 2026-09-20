@@ -46,13 +46,14 @@ func (cl *List) Process(bot *hbot.Bot, m *hbot.Message) {
 		return
 	}
 
-	// Track user activity for the !seen command (don't track bot's own messages)
+	// Track user activity for the !seen command and chat context for !hey
 	if m.From != bot.Nick {
 		go func() {
 			if err := UpdateUserSeen(m.From, m.To, m.Content); err != nil {
 				bot.Logger.Debug("seen tracking error", "error", err.Error())
 			}
 		}()
+		go RecordChatLine(m.To, m.From, m.Content)
 	}
 
 	if m.Content[0:1] == cl.Prefix {
