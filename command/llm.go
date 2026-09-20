@@ -235,7 +235,7 @@ func sanitizeLLMReply(s string) string {
 	// Hard cap the length without cutting a rune in half
 	if utf8.RuneCountInString(s) > llmMaxReply {
 		runes := []rune(s)
-		s = string(runes[:llmMaxReply]) + "…"
+		s = string(runes[:llmMaxReply]) + "..."
 	}
 	return s
 }
