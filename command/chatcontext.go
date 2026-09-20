@@ -10,9 +10,9 @@ import (
 // Memory only: nothing here is persisted.
 
 const (
-	chatCtxMaxLines   = 30                // kept per channel
-	chatCtxMaxLineLen = 200               // truncate individual lines
-	chatCtxStale      = 15 * time.Minute  // drop lines older than this
+	chatCtxMaxLines   = 30               // kept per channel
+	chatCtxMaxLineLen = 200              // truncate individual lines
+	chatCtxStale      = 15 * time.Minute // drop lines older than this
 	chatCtxGCInterval = 5 * time.Minute
 )
 
