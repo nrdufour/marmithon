@@ -18,8 +18,12 @@ import (
 )
 
 const (
-	llmTimeout   = 30 * time.Second
-	llmMaxTokens = 150
+	llmTimeout = 30 * time.Second
+
+	// GLM-5.3-Flash is a reasoning model: without reasoning.effort=minimal it
+	// burns the whole max_tokens budget thinking and returns an empty content
+	// (see https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)
+	llmMaxTokens = 500
 	llmMaxReply  = 400 // keep IRC replies short, don't flood the channel
 
 	// Anti-spam: per-user cooldown and a global rate limit to protect the API bill
@@ -35,10 +39,16 @@ type llmMessage struct {
 	Content string `json:"content"`
 }
 
+type llmReasoning struct {
+	Effort  string `json:"effort"`
+	Exclude bool   `json:"exclude"`
+}
+
 type llmRequest struct {
-	Model     string       `json:"model"`
-	Messages  []llmMessage `json:"messages"`
-	MaxTokens int          `json:"max_tokens"`
+	Model     string        `json:"model"`
+	Messages  []llmMessage  `json:"messages"`
+	MaxTokens int           `json:"max_tokens"`
+	Reasoning *llmReasoning `json:"reasoning"`
 }
 
 type llmResponse struct {
@@ -46,6 +56,7 @@ type llmResponse struct {
 		Message struct {
 			Content string `json:"content"`
 		} `json:"message"`
+		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
 	Usage *struct {
 		Cost        float64 `json:"cost"`
@@ -162,6 +173,11 @@ func (core Core) askLLM(question string) (string, error) {
 			{Role: "user", Content: question},
 		},
 		MaxTokens: llmMaxTokens,
+		Reasoning: &llmReasoning{
+			// Minimal thinking, dropped from the response: we only want the answer
+			Effort:  "minimal",
+			Exclude: true,
+		},
 	})
 	if err != nil {
 		return "", fmt.Errorf("encodage de la requête: %w", err)
@@ -208,6 +224,11 @@ func (core Core) askLLM(question string) (string, error) {
 	}
 	if len(parsed.Choices) == 0 {
 		return "", fmt.Errorf("aucune réponse du modèle")
+	}
+
+	if parsed.Choices[0].Message.Content == "" {
+		log.Printf("!hey: empty reply (finish_reason=%s)", parsed.Choices[0].FinishReason)
+		return "", fmt.Errorf("réponse vide du modèle")
 	}
 
 	// Log the cost so the monthly spend can be tracked against the key's limit
