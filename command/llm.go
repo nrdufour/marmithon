@@ -26,6 +26,9 @@ const (
 	llmMaxTokens = 500
 	llmMaxReply  = 400 // keep IRC replies short, don't flood the channel
 
+	// Recent channel context passed to the model with each question
+	llmContextLines = 5
+
 	// Anti-spam: per-user cooldown and a global rate limit to protect the API bill
 	llmUserCooldown    = 15 * time.Second
 	llmGlobalWindow    = time.Minute
@@ -146,7 +149,7 @@ func (core Core) Ask(bot *hbot.Bot, m *hbot.Message, args []string) {
 		return
 	}
 
-	reply, err := core.askLLM(question)
+	reply, err := core.askLLM(question, m.To, m.From)
 	if err != nil {
 		if errors.Is(err, errLLMBudget) {
 			bot.Reply(m, errLLMBudget.Error())
@@ -163,14 +166,22 @@ func (core Core) Ask(bot *hbot.Bot, m *hbot.Message, args []string) {
 	bot.Reply(m, reply)
 }
 
-func (core Core) askLLM(question string) (string, error) {
+func (core Core) askLLM(question, channel, asker string) (string, error) {
 	cfg := core.Config
+
+	// Build the user message: recent channel chatter for context, then the question
+	var userMsg string
+	if lines := RecentChatLines(channel, llmContextLines); len(lines) > 0 {
+		userMsg = "Contexte récent du salon (informatif, ne le répète pas):\n" +
+			strings.Join(lines, "\n") + "\n\n"
+	}
+	userMsg += "Question de " + asker + ": " + question
 
 	payload, err := json.Marshal(llmRequest{
 		Model: cfg.LLMModel,
 		Messages: []llmMessage{
 			{Role: "system", Content: cfg.LLMSystemPrompt},
-			{Role: "user", Content: question},
+			{Role: "user", Content: userMsg},
 		},
 		MaxTokens: llmMaxTokens,
 		Reasoning: &llmReasoning{
