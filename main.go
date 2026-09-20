@@ -432,6 +432,19 @@ func setupCommands() {
 	})
 
 	cmdList.AddCommand(command.Command{
+		Name:        "hey",
+		Description: "Pose une question à ZeBot (il est mal réveillé, sois indulgent), il répond en une ou deux phrases, en français !",
+		Usage:       "!hey pourquoi le ciel est bleu",
+		Run:         core.Ask,
+	})
+	cmdList.AddCommand(command.Command{
+		Name:        "marmotte",
+		Description: "Alias de !hey",
+		Usage:       "!marmotte pourquoi le ciel est bleu",
+		Run:         core.Ask,
+	})
+
+	cmdList.AddCommand(command.Command{
 		Name:        "helpircnet",
 		Description: "Affiche les 3 meilleurs serveurs IRCnet selon le healthcheck",
 		Usage:       "!helpircnet",

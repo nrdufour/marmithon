@@ -12,6 +12,11 @@ identdUsername = "marmithon"
 metricsEnabled = true
 metricsPort = "9090"
 
+# LLM !ask command (OpenRouter)
+# The key can also come from the OPENROUTER_API_KEY environment variable
+llmApiKey = ""
+llmModel = "z-ai/glm-5.3-flash"
+
 # Automatic reconnection (always enabled)
 reconnectDelaySeconds = 30
 reconnectMaxAttempts = 0  # 0 = unlimited
