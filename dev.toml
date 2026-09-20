@@ -15,3 +15,11 @@ metricsPort = "9090"
 # Automatic reconnection (always enabled)
 reconnectDelaySeconds = 10
 reconnectMaxAttempts = 5
+
+# LLM !ask command (OpenRouter)
+# The key can also come from the OPENROUTER_API_KEY environment variable
+llmApiKey = ""
+llmModel = "z-ai/glm-5.3-flash"
+# Persona optionnelle (sinon ZeBot par défaut: mal réveillé, fan de café et de rétrocomputing,
+# français, une-deux phrases max)
+# llmSystemPrompt = "Tu t'appelles ZeBot, tu réponds uniquement en français..."
