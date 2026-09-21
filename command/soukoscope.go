@@ -57,7 +57,7 @@ var (
 	soukMotsRe  = regexp.MustCompile(`Mots signatures</h2>\s*<p>([^<]+)</p>`)
 	soukRythRe  = regexp.MustCompile(`<th>matin</th><th>[^<]*</th><th>[^<]*</th><th>[^<]*</th></tr></thead>\s*<tbody><tr>\s*` +
 		`<td class="num">([0-9]+) ?%</td>\s*<td class="num">([0-9]+) ?%</td>\s*<td class="num">([0-9]+) ?%</td>\s*<td class="num">([0-9]+) ?%</td>`)
-	soukSlugRe  = regexp.MustCompile(`/habitues/([a-z0-9_-]+)/`)
+	soukSlugRe = regexp.MustCompile(`/habitues/([a-z0-9_-]+)/`)
 )
 
 // SoukProfile returns a compact profile block for the asker and any channel
