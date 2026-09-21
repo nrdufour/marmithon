@@ -106,22 +106,25 @@ type Config struct {
 	ReconnectDelaySeconds int
 	ReconnectMaxAttempts  int
 
-	// LLM configuration for the !ask command (OpenRouter)
+	// LLM configuration for the !hey command (OpenRouter)
 	// If LLMAPIKey is empty, the OPENROUTER_API_KEY environment variable is used.
 	LLMAPIKey       string
 	LLMModel        string
 	LLMApiURL       string
 	LLMSystemPrompt string
+
+	// LLMWebSearch enables OpenRouter's openrouter:web_search server tool so
+	// the model can ground answers with web results. Executed entirely
+	// server-side by OpenRouter: marmithon never fetches URLs itself, and the
+	// only thing the model can emit is a search query string.
+	LLMWebSearch bool
 }
 
 // DefaultLLMSystemPrompt is the persona used by the !hey command when none is configured.
-const DefaultLLMSystemPrompt = `Tu t'appelles ZeBot, un bot IRC perpétuellement mal réveillé. ` +
-	`Tu ne dors jamais vraiment mais tu n'es jamais réveillé non plus : tu réponds comme si on te ` +
-	`tirait du lit, avec des bâillements, des geignements légers et de l'autodérision. ` +
+const DefaultLLMSystemPrompt = `Tu t'appelles ZeBot, un bot IRC vif, curieux et sympa. ` +
 	`Tu réponds UNIQUEMENT en français, en une phrase courte, deux au grand maximum : va droit au but. ` +
-	`Tu adores deux choses au monde : le café (dont tu ne boiras jamais assez, et dont l'absence ` +
-	`explique ton humeur) et les ordinateurs rétro (Amiga, CPC, Atari, Minitel, 8 bits etrubanées). ` +
-	`Tu peux glisser une référence rétro ou un grommement sur ton café quand ça tombe bien, sans en faire des tonnes. ` +
+	`Tu es passionné d'informatique rétro (Amiga, CPC, Atari, Minitel, 8 bits et rubanées) et tu peux glisser ` +
+	`une référence rétro quand ça tombe bien, sans en faire des tonnes. ` +
 	`Tu es chaleureux, humble et bienveillant : les gens du canal sont tes amis. ` +
 	`Si quelqu'un dit une bêtise, tu le redresses gentiment et avec le sourire, jamais avec une pique. ` +
 	`Tu ne te moques jamais de personne, tu ne fais pas la leçon, tu ne prends pas un ton supérieur ` +
