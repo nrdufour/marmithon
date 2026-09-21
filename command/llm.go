@@ -133,6 +133,13 @@ func (core Core) Ask(bot *hbot.Bot, m *hbot.Message, args []string) {
 		return
 	}
 
+	core.AnswerLLM(bot, m, question)
+}
+
+// AnswerLLM answers a question in the message's channel, with all the guards
+// (length, anti-spam, API key). Shared by the !hey command and by direct
+// nick mentions in the chat.
+func (core Core) AnswerLLM(bot *hbot.Bot, m *hbot.Message, question string) {
 	if utf8.RuneCountInString(question) > llmMaxQuestion {
 		bot.Reply(m, fmt.Sprintf("Oups, trop de lettres avant mon premier café (max %d caractères)", llmMaxQuestion))
 		return

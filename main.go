@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -40,6 +41,34 @@ var CommandTrigger = hbot.Trigger{
 			m.IncMessagesReceived()
 		}
 		cmdList.Process(bot, m)
+		return false
+	},
+}
+
+// MentionTrigger makes the bot answer when someone addresses it by name in a
+// channel or in a query (e.g. "ZeBot: c'est quoi un Amiga ?"). Commands with
+// the ! prefix stay handled by CommandTrigger only.
+var MentionTrigger = hbot.Trigger{
+	Condition: func(bot *hbot.Bot, m *hbot.Message) bool {
+		if m.Command != "PRIVMSG" || m.From == "" || m.From == bot.Nick {
+			return false
+		}
+		if strings.HasPrefix(m.Content, cmdList.Prefix) {
+			return false
+		}
+		return strings.Contains(strings.ToLower(m.Content), strings.ToLower(bot.Nick))
+	},
+	Action: func(bot *hbot.Bot, m *hbot.Message) bool {
+		question := strings.TrimSpace(m.Content)
+		if strings.HasPrefix(strings.ToLower(m.Content), strings.ToLower(bot.Nick)) {
+			// Strip the nick and any punctuation after it: "ZeBot: foo" -> "foo"
+			question = strings.TrimSpace(m.Content[len(bot.Nick):])
+			question = strings.TrimLeft(question, ":,")
+			question = strings.TrimSpace(question)
+		}
+		if question != "" {
+			core.AnswerLLM(bot, m, question)
+		}
 		return false
 	},
 }
@@ -179,6 +208,7 @@ func createAndStartBot(conf config.Config, met *metrics.Metrics) (*hbot.Bot, err
 	// Update the bot reference in the existing core
 	core.Bot = bot
 	bot.AddTrigger(CommandTrigger)
+	bot.AddTrigger(MentionTrigger)
 	if met != nil {
 		bot.AddTrigger(MetricsTrigger)
 	}
@@ -433,7 +463,7 @@ func setupCommands() {
 
 	cmdList.AddCommand(command.Command{
 		Name:        "hey",
-		Description: "Pose une question à ZeBot (il est mal réveillé, sois indulgent), il répond en une ou deux phrases, en français !",
+		Description: "Pose une question à ZeBot (il est mal réveillé, sois indulgent), il répond en une ou deux phrases, en français ! Tu peux aussi l'appeler directement par son nom dans le salon",
 		Usage:       "!hey pourquoi le ciel est bleu",
 		Run:         core.Ask,
 	})
