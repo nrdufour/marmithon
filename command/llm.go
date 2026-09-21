@@ -229,6 +229,12 @@ func (core Core) askLLM(question, channel, asker string) (string, error) {
 		userMsg = "Contexte récent du salon (informatif, ne le répète pas):\n" +
 			strings.Join(lines, "\n") + "\n\n"
 	}
+	// Public soukoscope profiles of the asker and mentioned regulars
+	if cfg.LLMUserContext {
+		if prof := SoukProfile(cfg.SoukoscopeURL, asker, question); prof != "" {
+			userMsg += prof + "\n\n"
+		}
+	}
 	userMsg += "Question de " + asker + ": " + question
 
 	completion := llmRequest{
