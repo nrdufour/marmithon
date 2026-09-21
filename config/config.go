@@ -66,6 +66,9 @@ func FromFile(configFile string) (Config, error) {
 	if config.LLMSystemPrompt == "" {
 		config.LLMSystemPrompt = DefaultLLMSystemPrompt
 	}
+	if config.SoukoscopeURL == "" {
+		config.SoukoscopeURL = "https://souk.nemoworld.info"
+	}
 
 	return config, nil
 }
@@ -118,6 +121,12 @@ type Config struct {
 	// server-side by OpenRouter: marmithon never fetches URLs itself, and the
 	// only thing the model can emit is a search query string.
 	LLMWebSearch bool
+
+	// SoukoscopeURL is the base URL of the #souk stats site (public per-regular
+	// pages), used to give !hey context about channel participants.
+	SoukoscopeURL string
+	// LLMUserContext enables soukoscope profile injection into !hey prompts.
+	LLMUserContext bool
 }
 
 // DefaultLLMSystemPrompt is the persona used by the !hey command when none is configured.
