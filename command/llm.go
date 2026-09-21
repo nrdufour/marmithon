@@ -23,8 +23,14 @@ const (
 	// GLM-5.3-Flash is a reasoning model: without reasoning.effort=minimal it
 	// burns the whole max_tokens budget thinking and returns an empty content
 	// (see https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)
-	llmMaxTokens = 500
-	llmMaxReply  = 400 // keep IRC replies short, don't flood the channel
+	llmMaxTokens = 800
+	// Cap on the model's reply (runes). Short by default per the persona, but
+	// news/summary questions legitimately produce a few short lines.
+	llmMaxReply = 1000
+	// Max bytes per IRC PRIVMSG line when splitting long replies (server limit
+	// is 512 for the whole command; stay well under). hellabot's own splitText
+	// cuts at fixed 400 bytes mid-word, so we split ourselves at word bounds.
+	llmIrcLineBytes = 390
 
 	// Recent channel context passed to the model with each question
 	llmContextLines = 5
@@ -189,7 +195,29 @@ func (core Core) AnswerLLM(bot *hbot.Bot, m *hbot.Message, question string) {
 		return
 	}
 
-	bot.Reply(m, reply)
+	sendLLMReply(bot, m, reply)
+}
+
+// sendLLMReply splits a long reply into IRC-sized lines at word boundaries
+// (hellabot's built-in splitText cuts blindly at 400 bytes, mid-word).
+func sendLLMReply(bot *hbot.Bot, m *hbot.Message, text string) {
+	b := []byte(text)
+	for len(b) > llmIrcLineBytes {
+		cut := llmIrcLineBytes
+		// Never split inside a multi-byte rune
+		for cut > llmIrcLineBytes/2 && !utf8.RuneStart(b[cut]) {
+			cut--
+		}
+		// Prefer breaking at the last space of the window
+		if sp := bytes.LastIndexByte(b[:cut], ' '); sp > llmIrcLineBytes/2 {
+			cut = sp
+		}
+		bot.Reply(m, strings.TrimSpace(string(b[:cut])))
+		b = bytes.TrimSpace(b[cut:])
+	}
+	if len(b) > 0 {
+		bot.Reply(m, string(b))
+	}
 }
 
 func (core Core) askLLM(question, channel, asker string) (string, error) {
