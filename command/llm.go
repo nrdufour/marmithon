@@ -19,6 +19,9 @@ import (
 
 const (
 	llmTimeout = 30 * time.Second
+	// Web-search requests add provider-side search + synthesis latency; 30s is
+	// not enough and they die with "context deadline exceeded".
+	llmSearchTimeout = 75 * time.Second
 
 	// GLM-5.3-Flash is a reasoning model: without reasoning.effort=minimal it
 	// burns the whole max_tokens budget thinking and returns an empty content
@@ -267,7 +270,11 @@ func (core Core) askLLM(question, channel, asker string) (string, error) {
 		return "", fmt.Errorf("encodage de la requête: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), llmTimeout)
+	timeout := llmTimeout
+	if cfg.LLMWebSearch {
+		timeout = llmSearchTimeout
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.LLMApiURL, bytes.NewReader(payload))
