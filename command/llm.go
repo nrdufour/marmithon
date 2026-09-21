@@ -51,7 +51,26 @@ type llmRequest struct {
 	Model     string        `json:"model"`
 	Messages  []llmMessage  `json:"messages"`
 	MaxTokens int           `json:"max_tokens"`
-	Reasoning *llmReasoning `json:"reasoning"`
+	Reasoning *llmReasoning `json:"reasoning,omitempty"`
+	Tools     []llmTool     `json:"tools,omitempty"`
+}
+
+// llmTool wraps an OpenRouter server tool. Server tools are executed by
+// OpenRouter itself: the model only generates a search query string, we never
+// implement (or risk) a client-side tool loop. See
+// https://openrouter.ai/docs/guides/features/server-tools/web-search
+type llmTool struct {
+	Type       string             `json:"type"`
+	Parameters llmWebSearchParams `json:"parameters,omitempty"`
+}
+
+type llmWebSearchParams struct {
+	// parallel/fast: cheapest engine ($0.001/request), see the pricing table
+	Engine     string `json:"engine,omitempty"`
+	Mode       string `json:"mode,omitempty"`
+	MaxResults int    `json:"max_results,omitempty"`
+	// Hard cap: an injected prompt cannot chain searches and burn money
+	MaxUses int `json:"max_uses,omitempty"`
 }
 
 type llmResponse struct {
@@ -184,7 +203,7 @@ func (core Core) askLLM(question, channel, asker string) (string, error) {
 	}
 	userMsg += "Question de " + asker + ": " + question
 
-	payload, err := json.Marshal(llmRequest{
+	completion := llmRequest{
 		Model: cfg.LLMModel,
 		Messages: []llmMessage{
 			{Role: "system", Content: cfg.LLMSystemPrompt},
@@ -196,7 +215,20 @@ func (core Core) askLLM(question, channel, asker string) (string, error) {
 			Effort:  "minimal",
 			Exclude: true,
 		},
-	})
+	}
+	if cfg.LLMWebSearch {
+		completion.Tools = []llmTool{{
+			Type: "openrouter:web_search",
+			Parameters: llmWebSearchParams{
+				Engine:     "parallel",
+				Mode:       "fast",
+				MaxResults: 4,
+				MaxUses:    1,
+			},
+		}}
+	}
+
+	payload, err := json.Marshal(completion)
 	if err != nil {
 		return "", fmt.Errorf("encodage de la requête: %w", err)
 	}
