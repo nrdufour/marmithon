@@ -11,7 +11,7 @@ require (
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	golang.org/x/net v0.59.0
 	gopkg.in/inconshreveable/log15.v2 v2.16.0
-	modernc.org/sqlite v1.60.0
+	modernc.org/sqlite v1.60.1
 )
 
 require (
