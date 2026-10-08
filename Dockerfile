@@ -14,7 +14,7 @@ ARG IMAGE_URL=https://forge.internal/nemo/marmithon
 ARG IMAGE_DOCUMENTATION=https://forge.internal/nemo/marmithon
 # -----------------------------------------------------------------------------
 
-FROM docker.io/library/golang:1.27.1-alpine3.24 AS build
+FROM docker.io/library/golang:1.27.2-alpine3.24 AS build
 
 ARG TARGETOS
 ARG TARGETARCH
