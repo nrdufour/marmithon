@@ -51,7 +51,7 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            go_1_27 # matches the toolchain directive in go.mod
+            go_1_27
             gopls
             gotools # goimports
             # staticcheck carries its own go/types, so it has to be compiled
@@ -68,6 +68,9 @@
           # Matches how the binary is built, so a local `go test` cannot pass
           # under settings the package never uses.
           env.CGO_ENABLED = "0";
+          # Use the Go above, never a toolchain go.mod asks to download:
+          # staticcheck is built against it and can't read newer export data.
+          env.GOTOOLCHAIN = "local";
         };
       });
 
