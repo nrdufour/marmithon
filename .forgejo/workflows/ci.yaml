@@ -48,6 +48,7 @@ jobs:
       #
       # See avalanche: docs/architecture/deployment/multi-arch-image-builds.md
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -78,6 +79,32 @@ jobs:
               *) echo "ERROR: ${want} missing from the manifest list" >&2; exit 1 ;;
             esac
           done
+
+      # The deployment runs :latest with imagePullPolicy: Always, so a restart
+      # is what deploys. The kubeconfig is the runner's shared forgejo-ci
+      # identity, a sops secret on hawk; in irc it may patch this one
+      # Deployment and list pods, nothing else
+      # (avalanche: kubernetes/base/apps/irc/marmithon/deployer.yaml).
+      # A finished rollout only says a pod is ready. marmithon reports no commit of
+      # its own, so the check is that the pod's imageID is the manifest-list
+      # digest this job just pushed.
+      - name: Deploy
+        shell: bash
+        env:
+          KUBECONFIG: /run/secrets/forgejo-ci/kubeconfig
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          kubectl -n irc rollout restart deployment/marmithon
+          kubectl -n irc rollout status deployment/marmithon --timeout=5m
+          live=$(kubectl -n irc get pod -l app=marmithon --field-selector=status.phase=Running \
+            -o jsonpath='{.items[*].status.containerStatuses[0].imageID}')
+          echo "Pushed: ${DIGEST}"
+          echo "Live:   ${live}"
+          if [ "${live##*@}" != "${DIGEST}" ]; then
+            echo "ERROR: marmithon is not running the image just pushed" >&2
+            exit 1
+          fi
 
   style:
     # The gate that applies to every file, prose included. No paths filter on
