@@ -24,7 +24,7 @@
           inherit version;
           src = ./.;
 
-          vendorHash = "sha256-pCbMEYGzgbU3t8SRBzPa74cemeQtZEjMBLlWzbtR4mA=";
+          vendorHash = "sha256-7RErNI8P74IBrku8UpTjHu7shzNVrz7O2wxAXyYrt5k=";
 
           # test_nmi/ is a throwaway main package; only the bot ships.
           subPackages = [ "." ];

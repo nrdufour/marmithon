@@ -6,7 +6,6 @@ toolchain go1.27.3
 
 require (
 	github.com/BurntSushi/toml v1.6.0
-	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/bcicen/go-units v1.0.5
 	github.com/whyrusleeping/hellabot v0.0.0-20230331073038-70f5dd5c40d9
 	golang.org/x/net v0.62.0
@@ -16,7 +15,6 @@ require (
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
-	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/bcicen/bfstree v1.0.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/ftrvxmtrx/fd v0.0.0-20150925145434-c6d800382fff // indirect
@@ -27,7 +25,6 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
 	gopkg.in/sorcix/irc.v2 v2.0.0-20200812151606-3f15758ea8c7 // indirect
