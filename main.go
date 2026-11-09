@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -188,6 +189,12 @@ func createBot(conf config.Config) (*hbot.Bot, error) {
 			bot.Dial = func(network, addr string) (net.Conn, error) {
 				return dialer.Dial(network, addr)
 			}
+			// hellabot dials TLS through a SEPARATE hook that defaults to a
+			// direct tls.Dial: without this, ssl = true silently bypassed the
+			// proxy and the bot connected from the home address.
+			bot.DialTLS = func(network, addr string, tlsConf *tls.Config) (*tls.Conn, error) {
+				return dialTLSVia(dialer, network, addr, tlsConf)
+			}
 			log.Printf("Using SOCKS5 proxy at %s", conf.ProxyAddress)
 		}
 	}
@@ -197,6 +204,34 @@ func createBot(conf config.Config) (*hbot.Bot, error) {
 		return nil, err
 	}
 	return bot, nil
+}
+
+// dialTLSVia opens a TLS connection over dialer, the way tls.Dial would over
+// a direct connection: SNI and verification use the host part of addr unless
+// tlsConf names a server.
+func dialTLSVia(dialer proxy.Dialer, network, addr string, tlsConf *tls.Config) (*tls.Conn, error) {
+	raw, err := dialer.Dial(network, addr)
+	if err != nil {
+		return nil, err
+	}
+	conf := tlsConf.Clone()
+	if conf == nil {
+		conf = &tls.Config{}
+	}
+	if conf.ServerName == "" {
+		host, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			raw.Close()
+			return nil, err
+		}
+		conf.ServerName = host
+	}
+	conn := tls.Client(raw, conf)
+	if err := conn.Handshake(); err != nil {
+		raw.Close()
+		return nil, err
+	}
+	return conn, nil
 }
 
 func createAndStartBot(conf config.Config, met *metrics.Metrics) (*hbot.Bot, error) {
